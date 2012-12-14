@@ -9,10 +9,7 @@ We'll first define the function used to simulate the networks.
 #' @param noise  can be any positive number (for our study, we should try 0.25, 0.5, 0.75, 1, 1.5 and 2)  
 network.simulation <- function(size, sample, noise, outputDir)
 {
-	dat <- read.csv(paste(size,".csv",sep=""))
-
-	#dim(dat)
-	#head(dat)
+	dat <- read.csv(paste("../truth/", size,".csv",sep=""))
 
 	dat <- dat[dat$Source != dat$Target,]
 	dat[dat$Source > dat$Target,] <- dat[dat$Source > dat$Target,2:1]
@@ -29,7 +26,7 @@ network.simulation <- function(size, sample, noise, outputDir)
 	dat$regulation <- round(sign(rbinom(N, 1, 0.5) - 0.5)*rnorm(N,0.5,0.2) ,2)
 	dat$type <- sign(dat$regulation)	
 
-	write.csv(dat, paste("truth ",size,".csv",sep=""), row.names=F, quote=F)
+	write.csv(dat, paste("../truth/truth ",size,".csv",sep=""), row.names=F, quote=F)
 
 	#### initiate the matrix expr to store the simulated expression level ####
 
@@ -52,12 +49,10 @@ network.simulation <- function(size, sample, noise, outputDir)
 	while(length(unknown) > 0)
 	{
 		for(i in unknown)
-		{
-			# i <- unknown[1]
+		{			
 			source <- as.character(dat$Source[dat$Target == i])
 			if(all(source %in% known)) 
-			{ 
-				#print(dat[dat$Target == i,]); cat("\n")
+			{ 				
 				val <- ifelse(rep(length(source) == 1,nSamp), 
 					expr[as.character(source),]*dat[dat$Target == i,3] ,
 					dat[dat$Target == i,3] %*% expr[as.character(source),])
