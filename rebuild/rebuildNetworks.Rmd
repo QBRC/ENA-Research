@@ -73,13 +73,14 @@ processMat <- function(size, ns, sigma, dataDir, bootstrapCount, bootstrapPercen
 	addressing <- getTableAddressing(rownames(simul), truth)
 			
 	sp <- buildSpace(simul)
+	sp <- sp[upper.tri(sp)]
 	wg <- buildWgcna(simul)
+	wg <- wg[upper.tri(wg)]
 	gn <- bootstrap(simul, "buildGenenet", cluster=cluster)
 	#FIXME: passing bootstrapCount and percentage into bootstrap()
-	
-	
-	joint1 <- ena(cbind(gn[,3], wg[,3], sp[,3]))
-	joint1 <- data.frame(addressing, sp[,3], wg[,3], gn[,3], joint1, row.names=NULL)
+		
+	joint1 <- ena(cbind(gn[,3], wg, sp))
+	joint1 <- data.frame(addressing, sp, wg, gn[,3], joint1, row.names=NULL)
 	colnames(joint1) <- c("Source", "Dest", "Truth", "SPACE", "WGCNA", "BootstrappedGenenet", "ENA")
 	#Since this graph is undirected, for consistency, make Source always smaller than Dest
 	allGenes <- union(joint1$Source, joint1$Dest)
@@ -103,7 +104,7 @@ if (require(Rmpi) && require(snow)){
 dataDir <- "../data/simulations/"
 
 for (size in SIZE){
-	truthList <- read.csv(paste("/home/projects/JointGRN/code/truth ", size, ".csv", sep=""));
+	truthList <- read.csv(paste("../truth/truth ", size, ".csv", sep=""));
 	simul <- read.csv(paste(dataDir,size, "nSamp", NP[1], "Sigma", NOISE[1], ".csv",sep=""), row.names=1)	
 	truth <- truthToMat(rownames(simul), truthList)
 
