@@ -1,0 +1,18 @@
+# Ensemble Network Aggregation
+
+## Define Simulation Settings
+
+```{r}
+SIZE <- c("tiny","small","moderate","middle","large", "huge")
+NP <- c(20, 50, 100, 200, 500, 1000)
+NOISE <- c(0.25, 0.5, 0.75, 1.0, 1.5, 2.0) 
+```
+
+## Simulate Networks
+
+```{r simulate, cache=TRUE}
+library(knitr)
+sim <- knit_child("simulate/simulateNetworks.Rmd", eval=TRUE)
+```
+
+`r paste(sim, collapse = '\n')`
