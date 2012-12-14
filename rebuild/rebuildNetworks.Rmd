@@ -1,0 +1,115 @@
+This section will document the construction of the networks for all of the considered methods on all of the simulated datasets.
+
+### Loading Packages
+
+We'll load in all the relevant packages. `parmigene` is a package created to allow R users to work with Aracne. `bnlearn` is a package that implements a variety of Bayesian methods. `WGCNA`, `space`, and `GeneNet` all implement partial-correlation or correlation-based learning methods and will be identified by their package name for the duration of the study. All of these packages are supported by our `ENA` package which offers helper functions for all of these packages.
+
+```{r load, results='hide', message=FALSE}
+library(WGCNA)
+library(GeneNet)
+library(space)
+library(ENA)
+```
+
+### Aggregate Network
+
+These functions will help to aggregate the results from the above packages into a single table. We'll first want a way to construct the joint method by computing its rank product (we could explore other methods later). We'll then want to construct a single table showing the upper diagonal of the networks constructed for each method above.
+
+```{r}		
+getAggregateTable <- function (mat, truth){	
+	sp <- symmetricize(abs(buildSpace(mat)))
+	gn <- symmetricize(abs(buildGenenet(mat)))	
+	wg <- symmetricize(abs(buildWgcna(mat)))
+	
+	matrices <- list (Space=sp, GeneNet=gn, WGCNA=wg);	
+		
+	joint <- sp;
+	joint[1:nrow(sp),1:ncol(sp)] <- 0
+		
+	#extract the row, col indices for the upper-triangular portion of the matrix
+	address <- cbind(row(joint)[upper.tri(joint)], col(joint)[upper.tri(joint)])
+	address <- matrix(row.names(joint)[address], ncol=2)
+	
+	upper <- upper.tri(joint);
+		
+	toReturn <- data.frame(address, truth[upper], sp[upper], gn[upper],wg[upper])
+	colnames(toReturn) <- c("Source", "Dest", "Truth", "Space", "GeneNet", "WGCNA")
+	
+	toReturn <- cbind(toReturn,	ena(toReturn[,-(1:3)]))
+
+	colnames(toReturn)[ncol(toReturn)] <- "RankProd"
+
+	return(toReturn);	
+}
+```
+
+### Process Simulated Networks
+
+We'll first need a function to extract the true network for inclusion in our aggregated tables.
+
+```{r}
+truthToMat <- function(IDs, truthList){
+	truth <- matrix(0, ncol=length(IDs), nrow=length(IDs))
+	rownames(truth) <- IDs
+	colnames(truth) <- IDs
+	diag(truth) <- 1;
+	for (i in 1:dim(truthList)[1]){
+		s <- truthList[i,]$Source
+		t <- truthList[i,]$Target
+		r <- truthList[i,]$regulation
+		truth[which(IDs == s), which(IDs == t)] <- r
+	}
+	truth <- symmetricize(truth, "ud")
+	return (truth)
+}
+```
+
+We'll then need a helper function which, given all of the information about a simulation, can extract the simulated dataset, aggregate the results into a table, and write the output.
+
+```{r processMatrices}
+processMat <- function(size, ns, sigma, dataDir, bootstrapCount, bootstrapPercentage = 0.7, cluster, truth){
+	simul <- read.csv(paste(dataDir,size, "nSamp", ns, "Sigma", sigma, ".csv",sep=""), row.names=1)	
+	
+	addressing <- getTableAddressing(rownames(simul), truth)
+			
+	sp <- buildSpace(simul)
+	wg <- buildWgcna(simul)
+	gn <- bootstrap(simul, "buildGenenet", cluster=cluster)
+	#FIXME: passing bootstrapCount and percentage into bootstrap()
+	
+	
+	joint1 <- ena(cbind(gn[,3], wg[,3], sp[,3]))
+	joint1 <- data.frame(addressing, sp[,3], wg[,3], gn[,3], joint1, row.names=NULL)
+	colnames(joint1) <- c("Source", "Dest", "Truth", "SPACE", "WGCNA", "BootstrappedGenenet", "ENA")
+	#Since this graph is undirected, for consistency, make Source always smaller than Dest
+	allGenes <- union(joint1$Source, joint1$Dest)
+	levels(joint1$Source) <- allGenes
+	levels(joint1$Dest) <- allGenes
+	joint1[as.character(joint1[,1]) > as.character(joint1[,2]),1:2] <- joint1[as.character(joint1[,1]) > as.character(joint1[,2]),2:1]
+	
+	return(joint1)
+}
+```
+
+Finally, we'll loop through all of the simulated datasets to construct all of the networks associated. We'll simulate on 6 network sizes, 6 numbers of samples, and 6 noise values, for $6^3=216$ total datasets. If we're able to load the `Rmpi` and `snow` packages, we'll assume we are to distribute the load across a cluster. Otherwise, we'll just run it in this R process in a traditional way.
+
+```{r message=FALSE, results='hide'}
+cluster <- NULL
+if (require(Rmpi) && require(snow)){
+	invisible(capture.output(cluster <- makeCluster(mpi.universe.size()-1, type="MPI")))	
+}
+
+dataDir <- "../data/simulations/"
+
+for (size in SIZE)
+	truthList <- read.csv(paste("/home/projects/JointGRN/code/truth ", size, ".csv", sep=""));
+	simul <- read.csv(paste(dataDir,size, "nSamp", NP[1], "Sigma", NOISE[1], ".csv",sep=""), row.names=1)	
+	truth <- truthToMat(rownames(simul), truthList)
+
+	for (ns in NP){
+		for (sigma in NOISE){
+			results <- processMat(size, ns, sigma, dataDir, BOOTSTRAP_COUNT, cluster=cluster, truth=truth)				
+			saveRDS(results, file=paste("../data/results-ena/",size,"nSamp",ns,"Sigma",sigma,".Rds",sep=""))
+		}
+	}
+```

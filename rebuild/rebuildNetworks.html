@@ -5,7 +5,49 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 
-<title>Ensemble Network Aggregation</title>
+<title>Loading Packages</h2>
+
+<p>We&#39;ll load in all the relevant packages. <code>parmigene</code> is a package created to allow R users to work with Aracne. <code>bnlearn</code> is a package that implements a variety of Bayesian methods. <code>WGCNA</code>, <code>space</code>, and <code>GeneNet</code> all implement partial-correlation or correlation-based learning methods and will be identified by their package name for the duration of the study. All of these packages are supported by our <code>ENA</code> package which offers helper functions for all of these packages.</p>
+
+<pre><code class="r">library(WGCNA)
+library(GeneNet)
+library(space)
+library(ENA)
+</code></pre>
+
+<h2>Aggregate Network</h2>
+
+<p>These functions will help to aggregate the results from the above packages into a single table. We&#39;ll first want a way to construct the joint method by computing its rank product (we could explore other methods later). We&#39;ll then want to construct a single table showing the upper diagonal of the networks constructed for each method above.</p>
+
+<pre><code class="r">getAggregateTable &lt;- function(mat, truth) {
+    sp &lt;- symmetricize(abs(buildSpace(mat)))
+    gn &lt;- symmetricize(abs(buildGenenet(mat)))
+    wg &lt;- symmetricize(abs(buildWgcna(mat)))
+
+    matrices &lt;- list(Space = sp, GeneNet = gn, WGCNA = wg)
+
+    joint &lt;- sp
+    joint[1:nrow(sp), 1:ncol(sp)] &lt;- 0
+
+    # extract the row, col indices for the upper-triangular portion of the
+    # matrix
+    address &lt;- cbind(row(joint)[upper.tri(joint)], col(joint)[upper.tri(joint)])
+    address &lt;- matrix(row.names(joint)[address], ncol = 2)
+
+    upper &lt;- upper.tri(joint)
+
+    toReturn &lt;- data.frame(address, truth[upper], sp[upper], gn[upper], wg[upper])
+    colnames(toReturn) &lt;- c(&quot;Source&quot;, &quot;Dest&quot;, &quot;Truth&quot;, &quot;Space&quot;, &quot;GeneNet&quot;, &quot;WGCNA&quot;)
+
+    toReturn &lt;- cbind(toReturn, ena(toReturn[, -(1:3)]))
+
+    colnames(toReturn)[ncol(toReturn)] &lt;- &quot;RankProd&quot;
+
+    return(toReturn)
+}
+</code></pre>
+
+<h2>Process Simulated Networks</title>
 
 <base target="_blank"/>
 
@@ -252,116 +294,129 @@ pre .vhdl .literal { color: rgb(163, 21, 21); }
 </head>
 
 <body>
-<h1>Ensemble Network Aggregation</h1>
+<p>This section will document the construction of the networks for all of the considered methods on all of the simulated datasets.</p>
 
-<h2>Define Simulation Settings</h2>
+<h2>Loading Packages</h2>
 
-<pre><code class="r">SIZE &lt;- c(&quot;tiny&quot;)
-# SIZE &lt;- c(&#39;tiny&#39;,&#39;small&#39;,&#39;moderate&#39;,&#39;middle&#39;,&#39;large&#39;, &#39;huge&#39;)
-NP &lt;- c(20, 50, 100, 200, 500, 1000)
-NOISE &lt;- c(0.25, 0.5, 0.75, 1, 1.5, 2)
-BOOTSTRAP_COUNT &lt;- 120
+<p>We&#39;ll load in all the relevant packages. <code>parmigene</code> is a package created to allow R users to work with Aracne. <code>bnlearn</code> is a package that implements a variety of Bayesian methods. <code>WGCNA</code>, <code>space</code>, and <code>GeneNet</code> all implement partial-correlation or correlation-based learning methods and will be identified by their package name for the duration of the study. All of these packages are supported by our <code>ENA</code> package which offers helper functions for all of these packages.</p>
 
-set.seed(1234)
-library(knitr)
+<pre><code class="r">library(WGCNA)
+library(GeneNet)
+library(space)
+library(ENA)
 </code></pre>
 
-<h2>Simulate Networks</h2>
+<h2>Aggregate Network</h2>
 
-<pre><code class="r">sim &lt;- knit_child(&quot;simulate/simulateNetworks.Rmd&quot;, eval = TRUE)
-</code></pre>
+<p>These functions will help to aggregate the results from the above packages into a single table. We&#39;ll first want a way to construct the joint method by computing its rank product (we could explore other methods later). We&#39;ll then want to construct a single table showing the upper diagonal of the networks constructed for each method above.</p>
 
-<p><br/>
-We&#39;ll first define the function used to simulate the networks.</p>
+<pre><code class="r">getAggregateTable &lt;- function(mat, truth) {
+    sp &lt;- symmetricize(abs(buildSpace(mat)))
+    gn &lt;- symmetricize(abs(buildGenenet(mat)))
+    wg &lt;- symmetricize(abs(buildWgcna(mat)))
 
-<pre><code class="r">#&#39; Read the edge definition and simulate the regulation ###
-#&#39; 
-#&#39; @param size should be one of
-#&#39; c(&#39;tiny&#39;,&#39;small&#39;,&#39;moderate&#39;,&#39;middle&#39;,&#39;large&#39;, &#39;huge&#39;) @param sample can
-#&#39; be any positive number.  @param noise can be any positive number (for
-#&#39; our study, we should try 0.25, 0.5, 0.75, 1, 1.5 and 2)
-network.simulation &lt;- function(size, sample, noise, outputDir) {
-    dat &lt;- read.csv(paste(&quot;../truth/&quot;, size, &quot;.csv&quot;, sep = &quot;&quot;))
+    matrices &lt;- list(Space = sp, GeneNet = gn, WGCNA = wg)
 
-    dat &lt;- dat[dat$Source != dat$Target, ]
-    dat[dat$Source > dat$Target, ] <- dat[dat$Source > dat$Target, 2:1]
-    dat[dat$Source > dat$Target, ]
+    joint &lt;- sp
+    joint[1:nrow(sp), 1:ncol(sp)] &lt;- 0
 
-    Gene &lt;- union(dat$Source, dat$Target)
-    nGene &lt;- length(Gene)
+    # extract the row, col indices for the upper-triangular portion of the
+    # matrix
+    address &lt;- cbind(row(joint)[upper.tri(joint)], col(joint)[upper.tri(joint)])
+    address &lt;- matrix(row.names(joint)[address], ncol = 2)
 
-    N &lt;- dim(dat)[1]
-    dat$regulation &lt;- round(sign(rbinom(N, 1, 0.5) - 0.5) * rnorm(N, 0.5, 0.2), 
-        2)
-    dat$type <- sign(dat$regulation)
+    upper &lt;- upper.tri(joint)
 
-    write.csv(dat, paste(&quot;../truth/truth &quot;, size, &quot;.csv&quot;, sep = &quot;&quot;), row.names = F, 
-        quote = F)
+    toReturn &lt;- data.frame(address, truth[upper], sp[upper], gn[upper], wg[upper])
+    colnames(toReturn) &lt;- c(&quot;Source&quot;, &quot;Dest&quot;, &quot;Truth&quot;, &quot;Space&quot;, &quot;GeneNet&quot;, &quot;WGCNA&quot;)
 
-    #### initiate the matrix expr to store the simulated expression level ####
+    toReturn &lt;- cbind(toReturn, ena(toReturn[, -(1:3)]))
 
+    colnames(toReturn)[ncol(toReturn)] &lt;- &quot;RankProd&quot;
 
-    nSamp &lt;- sample
-    expr &lt;- matrix(0, nGene, nSamp)
-    rownames(expr) &lt;- Gene
-    colnames(expr) &lt;- paste(&quot;S&quot;, 1:nSamp, sep = &quot;&quot;)
-
-    sigma &lt;- noise
-
-    unknown &lt;- unique(dat$Target)
-    known &lt;- setdiff(Gene, unknown)
-
-    for (i in known) {
-        expr[as.character(i), ] &lt;- rbinom(nSamp, 1, 0.5) * 2 + rnorm(nSamp, 
-            0, sigma) - 1
-    }
-
-    while (length(unknown) &gt; 0) {
-        for (i in unknown) {
-            source &lt;- as.character(dat$Source[dat$Target == i])
-            if (all(source %in% known)) {
-                val &lt;- ifelse(rep(length(source) == 1, nSamp), expr[as.character(source), 
-                  ] * dat[dat$Target == i, 3], dat[dat$Target == i, 3] %*% expr[as.character(source), 
-                  ])
-                expr[as.character(i), ] &lt;- as.numeric(val &gt; 0) * 2 - 1 + rnorm(nSamp, 
-                  0, sigma)
-                known &lt;- append(known, i)
-                unknown &lt;- setdiff(unknown, i)
-            }
-        }
-    }
-
-    write.csv(round(expr, 2), paste(outputDir, size, &quot;nSamp&quot;, nSamp, &quot;Sigma&quot;, 
-        noise, &quot;.csv&quot;, sep = &quot;&quot;), row.names = T)
-
+    return(toReturn)
 }
 </code></pre>
 
-<p>Now we&#39;ll generate the networks described in the existing variables <code>SIZE</code>, <code>NP</code>, and <code>NOISE</code> defined elsewhere.</p>
+<h2>Process Simulated Networks</h2>
 
-<pre><code class="r">for (size in SIZE) {
-    for (sample in NP) {
-        for (noise in NOISE) {
-            network.simulation(size = size, sample = sample, noise = noise, 
-                outputDir = &quot;../data/simulations/&quot;)
-        }
+<p>We&#39;ll first need a function to extract the true network for inclusion in our aggregated tables.</p>
+
+<pre><code class="r">truthToMat &lt;- function(IDs, truthList) {
+    truth &lt;- matrix(0, ncol = length(IDs), nrow = length(IDs))
+    rownames(truth) &lt;- IDs
+    colnames(truth) &lt;- IDs
+    diag(truth) &lt;- 1
+    for (i in 1:dim(truthList)[1]) {
+        s &lt;- truthList[i, ]$Source
+        t &lt;- truthList[i, ]$Target
+        r &lt;- truthList[i, ]$regulation
+        truth[which(IDs == s), which(IDs == t)] &lt;- r
     }
+    truth &lt;- symmetricize(truth, &quot;ud&quot;)
+    return(truth)
 }
 </code></pre>
 
-<p></p>
+<p>We&#39;ll then need a helper function which, given all of the information about a simulation, can extract the simulated dataset, aggregate the results into a table, and write the output.</p>
 
-<h2>Rebuild Networks</h2>
+<pre><code class="r">processMat &lt;- function(size, ns, sigma, dataDir, bootstrapCount, 
+    bootstrapPercentage = 0.7, cluster, truth) {
+    simul &lt;- read.csv(paste(dataDir, size, &quot;nSamp&quot;, ns, &quot;Sigma&quot;, sigma, &quot;.csv&quot;, 
+        sep = &quot;&quot;), row.names = 1)
 
-<pre><code class="r">rebuild &lt;- knit_child(&quot;rebuild/rebuildNetworks.Rmd&quot;, eval = TRUE)
+    addressing &lt;- getTableAddressing(rownames(simul), truth)
+
+    sp &lt;- buildSpace(simul)
+    wg &lt;- buildWgcna(simul)
+    gn &lt;- bootstrap(simul, &quot;buildGenenet&quot;, cluster = cluster)
+    # FIXME: passing bootstrapCount and percentage into bootstrap()
+
+
+    joint1 &lt;- ena(cbind(gn[, 3], wg[, 3], sp[, 3]))
+    joint1 &lt;- data.frame(addressing, sp[, 3], wg[, 3], gn[, 3], joint1, row.names = NULL)
+    colnames(joint1) &lt;- c(&quot;Source&quot;, &quot;Dest&quot;, &quot;Truth&quot;, &quot;SPACE&quot;, &quot;WGCNA&quot;, &quot;BootstrappedGenenet&quot;, 
+        &quot;ENA&quot;)
+    # Since this graph is undirected, for consistency, make Source always
+    # smaller than Dest
+    allGenes &lt;- union(joint1$Source, joint1$Dest)
+    levels(joint1$Source) &lt;- allGenes
+    levels(joint1$Dest) &lt;- allGenes
+    joint1[as.character(joint1[, 1]) &gt; as.character(joint1[, 2]), 1:2] &lt;- joint1[as.character(joint1[, 
+        1]) &gt; as.character(joint1[, 2]), 2:1]
+
+    return(joint1)
+}
 </code></pre>
 
-<pre><code class="no-highlight">## Error: duplicated label &#39;unnamed-chunk-1&#39;
-</code></pre>
+<p>Finally, we&#39;ll loop through all of the simulated datasets to construct all of the networks associated. We&#39;ll simulate on 6 network sizes, 6 numbers of samples, and 6 noise values, for $6^3=216$ total datasets.</p>
 
-<pre><code class="no-highlight">
-Error in paste(rebuild, collapse = &quot;\n&quot;) : object &#39;rebuild&#39; not found
+<pre><code class="r">cluster &lt;- NULL
+if (require(Rmpi) &amp;&amp; require(snow)) {
+    invisible(capture.output(cluster &lt;- makeCluster(mpi.universe.size() - 1, 
+        type = &quot;MPI&quot;)))
+}
 
+SIZE &lt;- &quot;tiny&quot;
+NOISE &lt;- &quot;0.25&quot;
+NP &lt;- &quot;100&quot;
+
+dataDir &lt;- &quot;../data/simulations/&quot;
+
+for (size in SIZE) truthList &lt;- read.csv(paste(&quot;/home/projects/JointGRN/code/truth &quot;, 
+    size, &quot;.csv&quot;, sep = &quot;&quot;))
+simul &lt;- read.csv(paste(dataDir, size, &quot;nSamp&quot;, NP[1], &quot;Sigma&quot;, NOISE[1], 
+    &quot;.csv&quot;, sep = &quot;&quot;), row.names = 1)
+truth &lt;- truthToMat(rownames(simul), truthList)
+
+for (ns in NP) {
+    for (sigma in NOISE) {
+        results &lt;- processMat(size, ns, sigma, dataDir, BOOTSTRAP_COUNT, cluster = cluster, 
+            truth = truth)
+        saveRDS(results, file = paste(&quot;../data/results-ena/&quot;, size, &quot;nSamp&quot;, 
+            ns, &quot;Sigma&quot;, sigma, &quot;.Rds&quot;, sep = &quot;&quot;))
+    }
+}
 </code></pre>
 
 </body>

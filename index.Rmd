@@ -3,9 +3,11 @@
 ## Define Simulation Settings
 
 ```{r}
-SIZE <- c("tiny","small","moderate","middle","large", "huge")
+SIZE <- c("tiny")
+#SIZE <- c("tiny","small","moderate","middle","large", "huge")
 NP <- c(20, 50, 100, 200, 500, 1000)
 NOISE <- c(0.25, 0.5, 0.75, 1.0, 1.5, 2.0) 
+BOOTSTRAP_COUNT <- 120
 
 set.seed(1234)
 library(knitr)
@@ -13,8 +15,16 @@ library(knitr)
 
 ## Simulate Networks
 
-```{r simulate, results='hide', message=FALSE, cache=TRUE}
+```{r simulate, results='hide', message=FALSE}
 sim <- knit_child("simulate/simulateNetworks.Rmd", eval=TRUE)
 ```
 
 `r paste(sim, collapse = '\n')`
+
+## Rebuild Networks
+
+```{r rebuild, results='hide', message=FALSE}
+rebuild <- knit_child("rebuild/rebuildNetworks.Rmd", eval=TRUE)
+```
+
+`r paste(rebuild, collapse = '\n')`
