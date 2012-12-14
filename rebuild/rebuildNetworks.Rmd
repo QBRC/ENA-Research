@@ -102,7 +102,7 @@ if (require(Rmpi) && require(snow)){
 
 dataDir <- "../data/simulations/"
 
-for (size in SIZE)
+for (size in SIZE){
 	truthList <- read.csv(paste("/home/projects/JointGRN/code/truth ", size, ".csv", sep=""));
 	simul <- read.csv(paste(dataDir,size, "nSamp", NP[1], "Sigma", NOISE[1], ".csv",sep=""), row.names=1)	
 	truth <- truthToMat(rownames(simul), truthList)
@@ -113,4 +113,5 @@ for (size in SIZE)
 			saveRDS(results, file=paste("../data/results-ena/",size,"nSamp",ns,"Sigma",sigma,".Rds",sep=""))
 		}
 	}
+}
 ```
