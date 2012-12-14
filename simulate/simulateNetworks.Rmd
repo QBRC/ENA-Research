@@ -18,10 +18,6 @@ network.simulation <- function(size, sample, noise, outputDir)
 	Gene <- union(dat$Source,dat$Target)
 	nGene <- length(Gene)
 
-	print(c(size,dim(dat)[1],nGene, sample, noise))
-
-	######################
-
 	N <- dim(dat)[1]
 	dat$regulation <- round(sign(rbinom(N, 1, 0.5) - 0.5)*rnorm(N,0.5,0.2) ,2)
 	dat$type <- sign(dat$regulation)	
@@ -70,12 +66,12 @@ network.simulation <- function(size, sample, noise, outputDir)
 
 Now we'll generate the networks described in the existing variables `SIZE`, `NP`, and `NOISE` defined elsewhere.
 
-
 ```{r}
-set.seed(1234)
-
-for(size in SIZE)
-	for( sample in NP)
-		for(noise in NOISE)
+for(size in SIZE){
+	for( sample in NP){
+		for(noise in NOISE){
 			network.simulation(size = size, sample = sample, noise = noise, outputDir="../data/simulations/")
+		}
+	}
+}
 ```

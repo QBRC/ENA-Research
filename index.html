@@ -259,12 +259,14 @@ pre .vhdl .literal { color: rgb(163, 21, 21); }
 <pre><code class="r">SIZE &lt;- c(&quot;tiny&quot;, &quot;small&quot;, &quot;moderate&quot;, &quot;middle&quot;, &quot;large&quot;, &quot;huge&quot;)
 NP &lt;- c(20, 50, 100, 200, 500, 1000)
 NOISE &lt;- c(0.25, 0.5, 0.75, 1, 1.5, 2)
+
+set.seed(1234)
+library(knitr)
 </code></pre>
 
 <h2>Simulate Networks</h2>
 
-<pre><code class="r">library(knitr)
-sim &lt;- knit_child(&quot;simulate/simulateNetworks.Rmd&quot;, eval = TRUE)
+<pre><code class="r">sim &lt;- knit_child(&quot;simulate/simulateNetworks.Rmd&quot;, eval = TRUE)
 </code></pre>
 
 <p><br/>
@@ -285,10 +287,6 @@ network.simulation &lt;- function(size, sample, noise, outputDir) {
 
     Gene &lt;- union(dat$Source, dat$Target)
     nGene &lt;- length(Gene)
-
-    print(c(size, dim(dat)[1], nGene, sample, noise))
-
-    ######################
 
     N &lt;- dim(dat)[1]
     dat$regulation &lt;- round(sign(rbinom(N, 1, 0.5) - 0.5) * rnorm(N, 0.5, 0.2), 
@@ -339,228 +337,14 @@ network.simulation &lt;- function(size, sample, noise, outputDir) {
 
 <p>Now we&#39;ll generate the networks described in the existing variables <code>SIZE</code>, <code>NP</code>, and <code>NOISE</code> defined elsewhere.</p>
 
-<pre><code class="r">set.seed(1234)
-
-for (size in SIZE) for (sample in NP) for (noise in NOISE) network.simulation(size = size, 
-    sample = sample, noise = noise, outputDir = &quot;../data/simulations/&quot;)
-</code></pre>
-
-<pre><code class="no-highlight">## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;20&quot;   &quot;0.25&quot;
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;20&quot;   &quot;0.5&quot; 
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;20&quot;   &quot;0.75&quot;
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;20&quot;   &quot;1&quot;   
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;20&quot;   &quot;1.5&quot; 
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;20&quot;   &quot;2&quot;   
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;50&quot;   &quot;0.25&quot;
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;50&quot;   &quot;0.5&quot; 
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;50&quot;   &quot;0.75&quot;
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;50&quot;   &quot;1&quot;   
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;50&quot;   &quot;1.5&quot; 
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;50&quot;   &quot;2&quot;   
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;100&quot;  &quot;0.25&quot;
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;100&quot;  &quot;0.5&quot; 
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;100&quot;  &quot;0.75&quot;
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;100&quot;  &quot;1&quot;   
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;100&quot;  &quot;1.5&quot; 
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;100&quot;  &quot;2&quot;   
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;200&quot;  &quot;0.25&quot;
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;200&quot;  &quot;0.5&quot; 
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;200&quot;  &quot;0.75&quot;
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;200&quot;  &quot;1&quot;   
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;200&quot;  &quot;1.5&quot; 
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;200&quot;  &quot;2&quot;   
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;500&quot;  &quot;0.25&quot;
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;500&quot;  &quot;0.5&quot; 
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;500&quot;  &quot;0.75&quot;
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;500&quot;  &quot;1&quot;   
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;500&quot;  &quot;1.5&quot; 
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;500&quot;  &quot;2&quot;   
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;1000&quot; &quot;0.25&quot;
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;1000&quot; &quot;0.5&quot; 
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;1000&quot; &quot;0.75&quot;
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;1000&quot; &quot;1&quot;   
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;1000&quot; &quot;1.5&quot; 
-## [1] &quot;tiny&quot; &quot;18&quot;   &quot;17&quot;   &quot;1000&quot; &quot;2&quot;   
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;20&quot;    &quot;0.25&quot; 
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;20&quot;    &quot;0.5&quot;  
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;20&quot;    &quot;0.75&quot; 
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;20&quot;    &quot;1&quot;    
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;20&quot;    &quot;1.5&quot;  
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;20&quot;    &quot;2&quot;    
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;50&quot;    &quot;0.25&quot; 
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;50&quot;    &quot;0.5&quot;  
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;50&quot;    &quot;0.75&quot; 
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;50&quot;    &quot;1&quot;    
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;50&quot;    &quot;1.5&quot;  
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;50&quot;    &quot;2&quot;    
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;100&quot;   &quot;0.25&quot; 
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;100&quot;   &quot;0.5&quot;  
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;100&quot;   &quot;0.75&quot; 
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;100&quot;   &quot;1&quot;    
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;100&quot;   &quot;1.5&quot;  
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;100&quot;   &quot;2&quot;    
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;200&quot;   &quot;0.25&quot; 
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;200&quot;   &quot;0.5&quot;  
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;200&quot;   &quot;0.75&quot; 
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;200&quot;   &quot;1&quot;    
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;200&quot;   &quot;1.5&quot;  
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;200&quot;   &quot;2&quot;    
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;500&quot;   &quot;0.25&quot; 
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;500&quot;   &quot;0.5&quot;  
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;500&quot;   &quot;0.75&quot; 
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;500&quot;   &quot;1&quot;    
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;500&quot;   &quot;1.5&quot;  
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;500&quot;   &quot;2&quot;    
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;1000&quot;  &quot;0.25&quot; 
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;1000&quot;  &quot;0.5&quot;  
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;1000&quot;  &quot;0.75&quot; 
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;1000&quot;  &quot;1&quot;    
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;1000&quot;  &quot;1.5&quot;  
-## [1] &quot;small&quot; &quot;52&quot;    &quot;44&quot;    &quot;1000&quot;  &quot;2&quot;    
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;20&quot;       &quot;0.25&quot;    
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;20&quot;       &quot;0.5&quot;     
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;20&quot;       &quot;0.75&quot;    
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;20&quot;       &quot;1&quot;       
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;20&quot;       &quot;1.5&quot;     
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;20&quot;       &quot;2&quot;       
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;50&quot;       &quot;0.25&quot;    
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;50&quot;       &quot;0.5&quot;     
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;50&quot;       &quot;0.75&quot;    
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;50&quot;       &quot;1&quot;       
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;50&quot;       &quot;1.5&quot;     
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;50&quot;       &quot;2&quot;       
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;100&quot;      &quot;0.25&quot;    
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;100&quot;      &quot;0.5&quot;     
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;100&quot;      &quot;0.75&quot;    
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;100&quot;      &quot;1&quot;       
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;100&quot;      &quot;1.5&quot;     
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;100&quot;      &quot;2&quot;       
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;200&quot;      &quot;0.25&quot;    
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;200&quot;      &quot;0.5&quot;     
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;200&quot;      &quot;0.75&quot;    
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;200&quot;      &quot;1&quot;       
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;200&quot;      &quot;1.5&quot;     
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;200&quot;      &quot;2&quot;       
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;500&quot;      &quot;0.25&quot;    
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;500&quot;      &quot;0.5&quot;     
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;500&quot;      &quot;0.75&quot;    
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;500&quot;      &quot;1&quot;       
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;500&quot;      &quot;1.5&quot;     
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;500&quot;      &quot;2&quot;       
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;1000&quot;     &quot;0.25&quot;    
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;1000&quot;     &quot;0.5&quot;     
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;1000&quot;     &quot;0.75&quot;    
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;1000&quot;     &quot;1&quot;       
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;1000&quot;     &quot;1.5&quot;     
-## [1] &quot;moderate&quot; &quot;103&quot;      &quot;83&quot;       &quot;1000&quot;     &quot;2&quot;       
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;20&quot;     &quot;0.25&quot;  
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;20&quot;     &quot;0.5&quot;   
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;20&quot;     &quot;0.75&quot;  
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;20&quot;     &quot;1&quot;     
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;20&quot;     &quot;1.5&quot;   
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;20&quot;     &quot;2&quot;     
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;50&quot;     &quot;0.25&quot;  
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;50&quot;     &quot;0.5&quot;   
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;50&quot;     &quot;0.75&quot;  
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;50&quot;     &quot;1&quot;     
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;50&quot;     &quot;1.5&quot;   
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;50&quot;     &quot;2&quot;     
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;100&quot;    &quot;0.25&quot;  
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;100&quot;    &quot;0.5&quot;   
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;100&quot;    &quot;0.75&quot;  
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;100&quot;    &quot;1&quot;     
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;100&quot;    &quot;1.5&quot;   
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;100&quot;    &quot;2&quot;     
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;200&quot;    &quot;0.25&quot;  
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;200&quot;    &quot;0.5&quot;   
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;200&quot;    &quot;0.75&quot;  
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;200&quot;    &quot;1&quot;     
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;200&quot;    &quot;1.5&quot;   
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;200&quot;    &quot;2&quot;     
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;500&quot;    &quot;0.25&quot;  
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;500&quot;    &quot;0.5&quot;   
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;500&quot;    &quot;0.75&quot;  
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;500&quot;    &quot;1&quot;     
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;500&quot;    &quot;1.5&quot;   
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;500&quot;    &quot;2&quot;     
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;1000&quot;   &quot;0.25&quot;  
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;1000&quot;   &quot;0.5&quot;   
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;1000&quot;   &quot;0.75&quot;  
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;1000&quot;   &quot;1&quot;     
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;1000&quot;   &quot;1.5&quot;   
-## [1] &quot;middle&quot; &quot;290&quot;    &quot;231&quot;    &quot;1000&quot;   &quot;2&quot;     
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;20&quot;    &quot;0.25&quot; 
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;20&quot;    &quot;0.5&quot;  
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;20&quot;    &quot;0.75&quot; 
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;20&quot;    &quot;1&quot;    
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;20&quot;    &quot;1.5&quot;  
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;20&quot;    &quot;2&quot;    
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;50&quot;    &quot;0.25&quot; 
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;50&quot;    &quot;0.5&quot;  
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;50&quot;    &quot;0.75&quot; 
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;50&quot;    &quot;1&quot;    
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;50&quot;    &quot;1.5&quot;  
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;50&quot;    &quot;2&quot;    
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;100&quot;   &quot;0.25&quot; 
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;100&quot;   &quot;0.5&quot;  
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;100&quot;   &quot;0.75&quot; 
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;100&quot;   &quot;1&quot;    
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;100&quot;   &quot;1.5&quot;  
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;100&quot;   &quot;2&quot;    
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;200&quot;   &quot;0.25&quot; 
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;200&quot;   &quot;0.5&quot;  
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;200&quot;   &quot;0.75&quot; 
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;200&quot;   &quot;1&quot;    
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;200&quot;   &quot;1.5&quot;  
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;200&quot;   &quot;2&quot;    
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;500&quot;   &quot;0.25&quot; 
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;500&quot;   &quot;0.5&quot;  
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;500&quot;   &quot;0.75&quot; 
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;500&quot;   &quot;1&quot;    
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;500&quot;   &quot;1.5&quot;  
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;500&quot;   &quot;2&quot;    
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;1000&quot;  &quot;0.25&quot; 
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;1000&quot;  &quot;0.5&quot;  
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;1000&quot;  &quot;0.75&quot; 
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;1000&quot;  &quot;1&quot;    
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;1000&quot;  &quot;1.5&quot;  
-## [1] &quot;large&quot; &quot;837&quot;   &quot;612&quot;   &quot;1000&quot;  &quot;2&quot;    
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;20&quot;   &quot;0.25&quot;
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;20&quot;   &quot;0.5&quot; 
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;20&quot;   &quot;0.75&quot;
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;20&quot;   &quot;1&quot;   
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;20&quot;   &quot;1.5&quot; 
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;20&quot;   &quot;2&quot;   
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;50&quot;   &quot;0.25&quot;
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;50&quot;   &quot;0.5&quot; 
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;50&quot;   &quot;0.75&quot;
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;50&quot;   &quot;1&quot;   
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;50&quot;   &quot;1.5&quot; 
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;50&quot;   &quot;2&quot;   
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;100&quot;  &quot;0.25&quot;
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;100&quot;  &quot;0.5&quot; 
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;100&quot;  &quot;0.75&quot;
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;100&quot;  &quot;1&quot;   
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;100&quot;  &quot;1.5&quot; 
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;100&quot;  &quot;2&quot;   
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;200&quot;  &quot;0.25&quot;
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;200&quot;  &quot;0.5&quot; 
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;200&quot;  &quot;0.75&quot;
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;200&quot;  &quot;1&quot;   
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;200&quot;  &quot;1.5&quot; 
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;200&quot;  &quot;2&quot;   
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;500&quot;  &quot;0.25&quot;
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;500&quot;  &quot;0.5&quot; 
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;500&quot;  &quot;0.75&quot;
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;500&quot;  &quot;1&quot;   
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;500&quot;  &quot;1.5&quot; 
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;500&quot;  &quot;2&quot;   
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;1000&quot; &quot;0.25&quot;
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;1000&quot; &quot;0.5&quot; 
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;1000&quot; &quot;0.75&quot;
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;1000&quot; &quot;1&quot;   
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;1000&quot; &quot;1.5&quot; 
-## [1] &quot;huge&quot; &quot;1511&quot; &quot;1344&quot; &quot;1000&quot; &quot;2&quot;   
+<pre><code class="r">for (size in SIZE) {
+    for (sample in NP) {
+        for (noise in NOISE) {
+            network.simulation(size = size, sample = sample, noise = noise, 
+                outputDir = &quot;../data/simulations/&quot;)
+        }
+    }
+}
 </code></pre>
 
 <p></p>
