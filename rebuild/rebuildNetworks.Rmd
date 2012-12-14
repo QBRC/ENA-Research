@@ -97,6 +97,7 @@ Finally, we'll loop through all of the simulated datasets to construct all of th
 cluster <- NULL
 if (require(Rmpi) && require(snow)){
 	invisible(capture.output(cluster <- makeCluster(mpi.universe.size()-1, type="MPI")))	
+	warning(paste("Distributing bootstrapped networks across a cluster of", mpi.universe.size()-1, "CPUs."))
 }
 
 dataDir <- "../data/simulations/"
