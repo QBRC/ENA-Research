@@ -1,0 +1,80 @@
+Here we'll document the computation of the AUCs and partial-AUCs of the computed networks for the Joint GRN study.
+
+
+The following two functions will be used to calculate the AUC or pAUC of some prediction, respectively.
+
+```{r}
+library(ROCR)
+
+getAUC <- function(truth, predicted){
+  pred <- prediction(predicted, truth);
+  auc <- performance(pred, "auc")@y.values[[1]];
+  auc;
+}
+
+
+getpAUC <- function(truth, predicted, threshold=0.005){
+  pred <- prediction(predicted, truth);
+  auc <- performance(pred, "auc", fpr.stop=threshold)@y.values[[1]];
+  auc;
+}
+
+```
+
+We now want to produce 2 4D arrays to store the AUC and pAUC. The dimensions of the arrays are: network size, sample count, noise, and network construction method. We'll just loop through all of the arrangements of the variables until we've calculated the AUC and pAUC for every possible combination.
+
+```{r}
+
+METHODS <- c("Joint","Space", "WGCNA", "GeneNet")
+
+resultsDir <- "../data/results-ena/"
+
+#4D arrays
+AUCs <- array(NA,dim=c(length(METHODS), length(SIZE), length(NP), length(NOISE)), dimnames=list(Method=METHODS,Size=SIZE, Samples=NP, Noise=NOISE))
+pAUCs <- array(NA,dim=c(length(METHODS), length(SIZE), length(NP), length(NOISE)), dimnames=list(Method=METHODS,Size=SIZE, Samples=NP, Noise=NOISE))
+
+for (size in SIZE){			
+	for (ns in NP){				
+		for (sigma in NOISE){
+			results <- readRDS(paste(
+				resultsDir,
+				size,
+				"nSamp",
+				ns,
+				"Sigma",
+				sigma,
+				".Rds",
+				sep=""))
+			
+			truthCol <- results$Truth != 0
+			
+			AUCs["Joint", size, ns, sigma] <- getAUC(truthCol, results$ENA);
+			pAUCs["Joint", size, ns, sigma] <- getpAUC(truthCol, results$ENA);			
+						
+			AUCs["WGCNA", size, ns, sigma] <- getAUC(truthCol, results$WGCNA)
+			pAUCs["WGCNA", size, ns, sigma] <- getpAUC(truthCol, results$WGCNA)
+			
+			AUCs["GeneNet", size, ns, sigma] <- getAUC(truthCol, results$BootstrappedGenenet)
+			pAUCs["GeneNet", size, ns, sigma] <- getpAUC(truthCol, results$BootstrappedGenenet)
+			
+			AUCs["Space", size, ns, sigma] <- getAUC(truthCol, results$SPACE)
+			pAUCs["Space", size, ns, sigma] <- getpAUC(truthCol, results$SPACE)
+						
+		}
+	}	
+	save(AUCs, pAUCs, file="AUCs.Rda")
+}
+```
+
+It's probably easiest to keep a 4D array within R for now, rather than writing a series of CSVs. We can output selected 2D tables of interest at a later point.
+
+```{r}
+save(AUCs, pAUCs, file="AUCs.Rda")
+```
+
+Alternatively, we can convert the 4D matrix to a data.frame.
+
+```{r}
+aucTab <- as.data.frame.table(AUCs, responseName="AUC")
+paucTab <- as.data.frame.table(pAUCs, responseName="pAUC")
+```
