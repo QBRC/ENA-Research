@@ -70,7 +70,7 @@ Now we'll generate the networks described in the existing variables `SIZE`, `NP`
 for(size in SIZE){
 	for( sample in NP){
 		for(noise in NOISE){
-			network.simulation(size = size, sample = sample, noise = noise, outputDir="../data/simulations/")
+			network.simulation(size = size, sample = as.integer(sample), noise = as.numeric(noise), outputDir="../data/simulations/")
 		}
 	}
 }

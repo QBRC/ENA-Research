@@ -11,38 +11,6 @@ library(space)
 library(ENA)
 ```
 
-### Aggregate Network
-
-These functions will help to aggregate the results from the above packages into a single table. We'll first want a way to construct the joint method by computing its rank product (we could explore other methods later). We'll then want to construct a single table showing the upper diagonal of the networks constructed for each method above.
-
-```{r}		
-getAggregateTable <- function (mat, truth){	
-	sp <- symmetricize(abs(buildSpace(mat)))
-	gn <- symmetricize(abs(buildGenenet(mat)))	
-	wg <- symmetricize(abs(buildWgcna(mat)))
-	
-	matrices <- list (Space=sp, GeneNet=gn, WGCNA=wg);	
-		
-	joint <- sp;
-	joint[1:nrow(sp),1:ncol(sp)] <- 0
-		
-	#extract the row, col indices for the upper-triangular portion of the matrix
-	address <- cbind(row(joint)[upper.tri(joint)], col(joint)[upper.tri(joint)])
-	address <- matrix(row.names(joint)[address], ncol=2)
-	
-	upper <- upper.tri(joint);
-		
-	toReturn <- data.frame(address, truth[upper], sp[upper], gn[upper],wg[upper])
-	colnames(toReturn) <- c("Source", "Dest", "Truth", "Space", "GeneNet", "WGCNA")
-	
-	toReturn <- cbind(toReturn,	ena(toReturn[,-(1:3)]))
-
-	colnames(toReturn)[ncol(toReturn)] <- "RankProd"
-
-	return(toReturn);	
-}
-```
-
 ### Process Simulated Networks
 
 We'll first need a function to extract the true network for inclusion in our aggregated tables.
@@ -67,21 +35,20 @@ truthToMat <- function(IDs, truthList){
 We'll then need a helper function which, given all of the information about a simulation, can extract the simulated dataset, aggregate the results into a table, and write the output.
 
 ```{r processMatrices}
+
 processMat <- function(size, ns, sigma, dataDir, bootstrapCount, bootstrapPercentage = 0.7, cluster, truth){
 	simul <- read.csv(paste(dataDir,size, "nSamp", ns, "Sigma", sigma, ".csv",sep=""), row.names=1)	
 	
 	addressing <- getTableAddressing(rownames(simul), truth)
 			
-	sp <- buildSpace(simul)
-	sp <- sp[upper.tri(sp)]
-	wg <- buildWgcna(simul)
+	sp <- bootstrap(simul, "buildSpace", cluster=cluster, iterations = bootstrapCount, sample.percentage = bootstrapPercentage)	
+	wg <- symmetricize(abs(buildWgcna(simul)))
 	wg <- wg[upper.tri(wg)]
-	gn <- bootstrap(simul, "buildGenenet", cluster=cluster)
-	#FIXME: passing bootstrapCount and percentage into bootstrap()
-		
-	joint1 <- ena(cbind(gn[,3], wg, sp))
-	joint1 <- data.frame(addressing, sp, wg, gn[,3], joint1, row.names=NULL)
-	colnames(joint1) <- c("Source", "Dest", "Truth", "SPACE", "WGCNA", "BootstrappedGenenet", "ENA")
+	gn <- bootstrap(simul, "buildGenenet", cluster=cluster, iterations = bootstrapCount, sample.percentage = bootstrapPercentage)
+			
+	joint1 <- ena(cbind(gn[,3], wg, sp[,3]))
+	joint1 <- data.frame(addressing, sp[,3], wg, gn[,3], joint1, row.names=NULL)
+	colnames(joint1) <- c("Source", "Dest", "Truth", "BootstrappedSPACE", "WGCNA", "BootstrappedGenenet", "ENA")
 	#Since this graph is undirected, for consistency, make Source always smaller than Dest
 	allGenes <- union(joint1$Source, joint1$Dest)
 	levels(joint1$Source) <- allGenes
