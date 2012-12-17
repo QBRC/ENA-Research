@@ -111,24 +111,20 @@ results$Truth <- as.integer(results$Truth != 0)
 
 library(RColorBrewer)
 colors <- brewer.pal(4, "Dark2")
-plot(0, 0, type="n", xlim=c(0,50), ylim=c(0,35), xlab="Connections Predicted", ylab="False Positives")
-legend(0, 30, c("SPACE", "WGCNA", "GeneNet", "ENA"), col=colors, lwd=3, lty=1:4, y.intersp=1.5)
+plot(0, 0, type="n", xlim=c(0,500), ylim=c(0,400), xlab="Connections Predicted", ylab="False Positives")
+legend(0, 200, c("SPACE", "WGCNA", "GeneNet", "ENA"), col=colors, lwd=3, lty=1:4, y.intersp=1.5)
 
 #' Plots a single line of the total identifid on the x-axis vs the
 #' false positives on the y-axis.
 #' @param df the data frame to use in the format of having the first column be the truth and the second column be the predictions for this method
 #' @param color dictates the color of the line plotted
 plotPerformance <- function(df, color=1, lty){
-	#normalize to 0:1
-	df[,2] <- df[,2] / max(df[,2])
 	df <- df[order(df[,2], decreasing=TRUE),]
-	df$FalsePos <- df[,2]
-	df$FalsePos[df$Truth == 1] <- 0
-	
-	#Done organizing the data.frame, now can format for plotting.
+	df$FalsePos <- as.integer(!df$Truth)
 	df$FalsePos <- cumsum(df$FalsePos)
-	df[,2] <- cumsum(df[,2])
-	lines(x=c(0,df[,2]), y=c(0,df[,3]), col=color, lwd=2, lty=lty)
+	
+	#Done organizing the data.frame, now can format for plotting.	
+	lines(x=0:nrow(df)-1, y=c(0,df[,3]), col=color, lwd=2, lty=lty)
 }
 
 sp <- results[,c(3,4)]
