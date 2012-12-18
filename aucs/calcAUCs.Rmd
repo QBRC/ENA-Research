@@ -95,7 +95,14 @@ print(xyplot(Freq ~ Samples, group=Method, data=as.data.frame.table(AUCs[,size,,
 
 And we can select on particular network from that graph and plot more specific information, such as the total number of identified connections vs. the number of false positives after reading in that network's results again.
 
-```{r}
+```{r, fig.width=10, fig.height=6}
+par(mfrow=c(1,2), mar=c(5.1, 4.1, 4.1, .6))
+
+library(RColorBrewer)
+colors <- brewer.pal(4, "Dark2")
+
+#First plot
+
 samples <- "200"
 results <- readRDS(paste(
 	resultsDir,
@@ -109,22 +116,25 @@ results <- readRDS(paste(
 
 results$Truth <- as.integer(results$Truth != 0)
 
-library(RColorBrewer)
-colors <- brewer.pal(4, "Dark2")
-plot(0, 0, type="n", xlim=c(0,500), ylim=c(0,400), xlab="Connections Predicted", ylab="False Positives")
-legend(0, 200, c("SPACE", "WGCNA", "GeneNet", "ENA"), col=colors, lwd=3, lty=1:4, y.intersp=1.5)
+plot(0, 0, type="n", xlim=c(0,50), ylim=c(0,35), xlab="Predicted Connection Strength", ylab="False Positive Strength")
+legend(0, 30, c("SPACE", "WGCNA", "GeneNet", "ENA"), col=colors, lwd=3, lty=1:4, y.intersp=1.5)
+
 
 #' Plots a single line of the total identifid on the x-axis vs the
 #' false positives on the y-axis.
 #' @param df the data frame to use in the format of having the first column be the truth and the second column be the predictions for this method
 #' @param color dictates the color of the line plotted
 plotPerformance <- function(df, color=1, lty){
+	#normalize to 0:1
+	df[,2] <- df[,2] / max(df[,2])
 	df <- df[order(df[,2], decreasing=TRUE),]
-	df$FalsePos <- as.integer(!df$Truth)
-	df$FalsePos <- cumsum(df$FalsePos)
+	df$FalsePos <- df[,2]
+	df$FalsePos[df$Truth == 1] <- 0
 	
-	#Done organizing the data.frame, now can format for plotting.	
-	lines(x=0:nrow(df)-1, y=c(0,df[,3]), col=color, lwd=2, lty=lty)
+	#Done organizing the data.frame, now can format for plotting.
+	df$FalsePos <- cumsum(df$FalsePos)
+	df[,2] <- cumsum(df[,2])
+	lines(x=c(0,df[,2]), y=c(0,df[,3]), col=color, lwd=2, lty=lty)
 }
 
 sp <- results[,c(3,4)]
@@ -139,8 +149,71 @@ plotPerformance(gn,colors[3], 4)
 ena <- results[,c(3,7)]
 plotPerformance(ena,colors[4], 5)
 
-```
+##second plot
 
+par(mar=c(5.1, 2.1, 4.1, 1.1))
+
+samples <- "1000"
+
+results <- readRDS(paste(
+	resultsDir,
+	size,
+	"nSamp",
+	samples,
+	"Sigma",
+	noise,
+	".Rds",
+	sep=""))
+
+results$Truth <- as.integer(results$Truth != 0)
+
+plot(0, 0, type="n", xlim=c(0,50), ylim=c(0,30), xlab="Predicted Connection Strength", ylab="")
+
+sp <- results[,c(3,4)]
+plotPerformance(sp,colors[1], 2)
+
+wg <- results[,c(3,5)]
+plotPerformance(wg,colors[2], 3)
+
+gn <- results[,c(3,6)]
+plotPerformance(gn,colors[3], 4)
+
+ena <- results[,c(3,7)]
+plotPerformance(ena,colors[4], 5)
+```
 
 ### Rank Summary
 
+The simplest way to analyze the relative pAUC or AUCs would just be to rank them, rather than trying to determine how "substantial" an improvement of .01 in the AUC, for instance, really is. So we can use the rank function, which will give us an order to all of the methods in which the highest ranked methods performed the best.
+
+We could summarize these for a network size/sample size combination across all noise values, for instance. The code below does that, then further summarizes those summaries across all sample size values -- producing a 2D table showing the average rank for a method at a network size across all noise and sample size values.
+
+AUCs are shown here.
+
+```{r}
+rankAvg <- array(dim=c(length(METHODS), length(SIZE)), dimnames=list(Method=METHODS, Size=SIZE))
+for (size in SIZE){
+	thisSize <- array(dim=c(length(NOISE), length(METHODS)), dimnames=list(Noise=NOISE, Method=METHODS))
+	for (sigma in NOISE){
+		thisSize[as.character(sigma), ] <- apply(apply(AUCs[,size,,as.character(sigma)], "Samples", function(x){rank(x,na.last="keep")}), 1, mean)
+	}
+	rankAvg[,size] <- apply(thisSize, 2, mean);
+}
+rankAvg
+apply(rankAvg,2,rank)
+```
+
+And pAUCs here.
+
+```{r}
+rankpAvg <- array(dim=c(length(METHODS), length(SIZE)), dimnames=list(Method=METHODS, Size=SIZE))
+for (size in SIZE){
+	thisSize <- array(dim=c(length(NOISE), length(METHODS)), dimnames=list(Noise=NOISE, Method=METHODS))
+	for (sigma in NOISE){
+		thisSize[as.character(sigma), ] <- apply(apply(pAUCs[,size,,as.character(sigma)], "Samples", function(x){rank(x,na.last="keep")}), 1, mean)
+	}
+	rankpAvg[,size] <- apply(thisSize, 2, mean);
+}
+rankpAvg
+apply(rankpAvg,2,rank)
+```

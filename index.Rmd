@@ -27,3 +27,12 @@ rebuild <- knit_child("rebuild/rebuildNetworks.Rmd", eval=TRUE)
 ```
 
 `r paste(rebuild, collapse = '\n')`
+
+## Calculate Area Under the ROC Curve
+
+```{r aucs, results='hide', message=FALSE}
+aucs <- knit_child("aucs/calcAUCs.Rmd", eval=TRUE)
+```
+
+`r paste(aucs, collapse = '\n')`
+
