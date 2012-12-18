@@ -47,7 +47,7 @@ single_vs_bootstrapped <- function(data, fun, iterations=500, cluster=NULL, samp
 
 ```
 
-We can now define a couple of functions used in analyzing the AUC of the above function.
+We can now define a handful of functions used in analyzing the AUC of the above function.
 
 ```{r}
 library(ROCR)
@@ -71,7 +71,7 @@ compute_ena_aucs <- function(mat,truth){
 	aucs <- NULL
 	for (i in 1:ncol(mat)){
 		if (i != 1){
-			iter <- ena(mat[,1:i])
+			iter <- 1/((1/iter) + log(rank(-mat[,i]) + 1))
 		} else{
 			iter <- mat[,1]	
 		}		
@@ -84,26 +84,27 @@ compute_ena_aucs <- function(mat,truth){
 #' techniques and return the diferences in the AUCs of each method.
 #' @param data the expression data on which reconstruction will be applied
 #' @param truth the binary truth matrix for this data
-bootstrapNetwork <- function(data, truth){
-	sp <- single_vs_bootstrapped(data, "buildSpace")
+bootstrapNetwork <- function(data, truth, iterations){
+	sp <- single_vs_bootstrapped(data, "buildSpace", iterations=iterations)
 	spAUC <- getAUC(truth, sp$Single)
 	spBoot <- compute_ena_aucs(sp[,-1], truth)
 	
-	wg <- single_vs_bootstrapped(data, "buildWgcna")
+	wg <- single_vs_bootstrapped(data, "buildWgcna", iterations=iterations)
 	wgAUC <- getAUC(truth, wg$Single)
 	wgBoot <- compute_ena_aucs(wg[,-1], truth)
 	
-	gn <- single_vs_bootstrapped(data, "buildGenenet")
+	gn <- single_vs_bootstrapped(data, "buildGenenet", iterations=iterations)
 	gnAUC <- getAUC(truth, gn$Single)
 	gnBoot <- compute_ena_aucs(gn[,-1], truth)
 	
-	results <- data.frame(list(iterations=integer(), method=character(), auc=numeric()))	
-	results <- rbind(results, cbind(iterations=1:length(spBoot), method="SPACE", auc=as.numeric(spBoot-spAUC)))
-	results <- rbind(results, cbind(iterations=1:length(wgBoot), method="WGCNA", auc=as.numeric(wgBoot-wgAUC)))
-	results <- rbind(results, cbind(iterations=1:length(gnBoot), method="GeneNet", auc=as.numeric(gnBoot-gnAUC)))
+	results <- array(NA, dim=c(3, iterations), dimnames=list(Method=c("SPACE", "WGCNA", "GeneNet"), Iteration=1:iterations))
 	
-	results$iterations <- as.integer(as.character(results$iterations))
-	results$auc <- as.numeric(as.character(results$auc))
+	results["SPACE",] <- spBoot - spAUC
+	results["WGCNA",] <- wgBoot - wgAUC
+	results["GeneNet",] <- gnBoot - gnAUC
+	
+	#note that you can use as.data.frame.table(results) to flatten these results
+	#into a data.frame (i.e. for ggplotting.)
 	
 	results
 }
@@ -130,10 +131,9 @@ getExpression <- function(size, np, sigma){
 ```
 
 ```{r}
-ggplot(results, aes(iterations, auc, color=method)) + geom_line() + geom_hline(aes(yintercept=0))
+small100s05 <- bootstrapNetwork(getExpression("small", "100", "1.5"), getTruth("small"), iterations=150)
+small100s05 <- transform(as.data.frame.table(small100s05, responseName="AUC"), Iteration=as.integer(as.character(Iteration)))
+
+ggplot(small100s05, aes(Iteration, AUC, color=Method, group=Method)) + geom_line() + geom_hline(aes(yintercept=0))
 ```
-
-
-
-
 
