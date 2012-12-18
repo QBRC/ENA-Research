@@ -1,6 +1,6 @@
 This section will compare the single execution of a networkreconstruction technique to a bootstrapped execution. The single execution will use all 100% of the samples in its construction, whereas the bootstrapped version will only use 70% each iteration.
 
-We'll first define the function that will compute the AUC of a single iteration vs. the bootstrapped version.
+We'll first define the function that will give us the resultant network from a single iteration of 100% and a series of smaller iterations at 70%.
 
 ```{r}
 #' Create a data.frame storing one single iteration of the selecte method along with multiple 
@@ -47,17 +47,26 @@ single_vs_bootstrapped <- function(data, fun, iterations=500, cluster=NULL, samp
 
 ```
 
+We can now define a couple of functions used in analyzing the AUC of the above function.
+
 ```{r}
-
-
 library(ROCR)
+#' Compute the AUC of the given data
+#' @param truth a vector of binary truth values
+#' @param predicted a vector of numeric prediction values.
 getAUC <- function(truth, predicted){
   pred <- prediction(predicted, truth);
   auc <- performance(pred, "auc")@y.values[[1]];
   auc;
 }
 
-
+#' Compue the AUCs of all sequential ENA datasets in the provided data.frame
+#' and return the AUCs.
+#' @param mat the data.frame/matrix with each column representing a single 
+#' iteration's resultant network and each row representing an edge in the
+#' network.
+#' @param truth a vector of binary truth values for each row in the provided
+#' matrix.
 compute_ena_aucs <- function(mat,truth){
 	aucs <- NULL
 	for (i in 1:ncol(mat)){
@@ -71,6 +80,10 @@ compute_ena_aucs <- function(mat,truth){
 	aucs
 }
 
+#' Compute the compute_ena_aucs function on all three network reconstruction
+#' techniques and return the diferences in the AUCs of each method.
+#' @param data the expression data on which reconstruction will be applied
+#' @param truth the binary truth matrix for this data
 bootstrapNetwork <- function(data, truth){
 	sp <- single_vs_bootstrapped(data, "buildSpace")
 	spAUC <- getAUC(truth, sp$Single)
@@ -95,28 +108,30 @@ bootstrapNetwork <- function(data, truth){
 	results
 }
 
-ggplot(results, aes(iterations, auc, color=method)) + geom_line() + geom_hline(aes(yintercept=0))
-
-bootstrapAllNetworks <- function(size){
+#' Get a binary vector of truth for the given size corresponding to the upper
+#' triangle of the dataset.
+#' @param size one of "tiny", "small", "moderate", "middle", or "large"
+getTruth <- function(size){
 	truthList <- read.csv(paste("../truth/truth ", size, ".csv", sep=""));
 	simul <- read.csv(paste(dataDir,size, "nSamp", NP[1], "Sigma", NOISE[1], ".csv",sep=""), row.names=1)	
 	truth <- truthToMat(rownames(simul), truthList)
 	addr <- getTableAddressing(rownames(truth), truth)
 	truth <- addr$Truth != 0
-	
-	for (np in NP){
-		for (sigma in  NOISE){
-			data <- read.csv(paste("../data/simulations/",size, "nSamp", ns, "Sigma", sigma, ".csv",sep=""), row.names=1)	
-			bootstrapNetwork(data, truth)
-		}
-	}
-	
+		
+	truth		
 }
 
-
-
+#' Get the expression data fora particular network size, sample number, and 
+#' noise value.
+getExpression <- function(size, np, sigma){
+	data <- read.csv(paste("../data/simulations/",size, "nSamp", ns, "Sigma", sigma, ".csv",sep=""), row.names=1)	
+	data
+}
 ```
 
+```{r}
+ggplot(results, aes(iterations, auc, color=method)) + geom_line() + geom_hline(aes(yintercept=0))
+```
 
 
 
