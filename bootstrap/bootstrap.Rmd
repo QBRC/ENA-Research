@@ -1,0 +1,124 @@
+This section will compare the single execution of a networkreconstruction technique to a bootstrapped execution. The single execution will use all 100% of the samples in its construction, whereas the bootstrapped version will only use 70% each iteration.
+
+We'll first define the function that will compute the AUC of a single iteration vs. the bootstrapped version.
+
+```{r}
+#' Create a data.frame storing one single iteration of the selecte method along with multiple 
+#' bootstrapped iterations of the function. This can later be used to analyze the performance of 
+#' the ENA bootstrapping approach.
+#' @param data the matrix of gene expression to reconstruct
+#' @param the character representation of the function to use to reconstruct
+#' @param iterations the number of iterations to bootstrap through
+#' @param cluster the MPI cluster to use when bootstrapping
+#' @param sample.percentage the percentage of total samples to use in each bootstrapped iteration.
+single_vs_bootstrapped <- function(data, fun, iterations=500, cluster=NULL, sample.percentage = 0.7){
+    funName <- fun
+    fun <- get(fun)
+    funWrapper <- function(rand.seed, fun, data, sample.percentage, 
+        ...) {
+        set.seed(rand.seed)
+        sampledData <- data[, sample(1:ncol(data), round(sample.percentage * 
+            ncol(data)))]
+        net <- symmetricize(abs(fun(sampledData)))
+        return(net[upper.tri(net)])
+    }
+    toReturn <- getTableAddressing(rownames(data), truth)
+    if (!missing(cluster) && "MPIcluster" %in% class(cluster)) {
+        clusterExport(cluster, c("symmetricize"))
+        result <- clusterApplyLB(cluster, 1:iterations, funWrapper, 
+            fun, data, sample.percentage)
+    }
+    else {
+        result <- lapply(1:iterations, funWrapper, fun, data, 
+            sample.percentage)
+    }
+    result <- as.data.frame(result)
+    colnames(result) <- 1:iterations
+    
+    single <- symmetricize(abs(fun(data)))
+    single <- single[upper.tri(single)]
+    
+    toReturn <- cbind(single, result)
+    colnames(toReturn)[1] <- "Single"
+        
+    return(toReturn)
+}
+	
+
+```
+
+```{r}
+
+
+library(ROCR)
+getAUC <- function(truth, predicted){
+  pred <- prediction(predicted, truth);
+  auc <- performance(pred, "auc")@y.values[[1]];
+  auc;
+}
+
+
+compute_ena_aucs <- function(mat,truth){
+	aucs <- NULL
+	for (i in 1:ncol(mat)){
+		if (i != 1){
+			iter <- ena(mat[,1:i])
+		} else{
+			iter <- mat[,1]	
+		}		
+		aucs[i] <- getAUC(truth, iter)
+	}
+	aucs
+}
+
+bootstrapNetwork <- function(data, truth){
+	sp <- single_vs_bootstrapped(data, "buildSpace")
+	spAUC <- getAUC(truth, sp$Single)
+	spBoot <- compute_ena_aucs(sp[,-1], truth)
+	
+	wg <- single_vs_bootstrapped(data, "buildWgcna")
+	wgAUC <- getAUC(truth, wg$Single)
+	wgBoot <- compute_ena_aucs(wg[,-1], truth)
+	
+	gn <- single_vs_bootstrapped(data, "buildGenenet")
+	gnAUC <- getAUC(truth, gn$Single)
+	gnBoot <- compute_ena_aucs(gn[,-1], truth)
+	
+	results <- data.frame(list(iterations=integer(), method=character(), auc=numeric()))	
+	results <- rbind(results, cbind(iterations=1:length(spBoot), method="SPACE", auc=as.numeric(spBoot-spAUC)))
+	results <- rbind(results, cbind(iterations=1:length(wgBoot), method="WGCNA", auc=as.numeric(wgBoot-wgAUC)))
+	results <- rbind(results, cbind(iterations=1:length(gnBoot), method="GeneNet", auc=as.numeric(gnBoot-gnAUC)))
+	
+	results$iterations <- as.integer(as.character(results$iterations))
+	results$auc <- as.numeric(as.character(results$auc))
+	
+	results
+}
+
+ggplot(results, aes(iterations, auc, color=method)) + geom_line() + geom_hline(aes(yintercept=0))
+
+bootstrapAllNetworks <- function(size){
+	truthList <- read.csv(paste("../truth/truth ", size, ".csv", sep=""));
+	simul <- read.csv(paste(dataDir,size, "nSamp", NP[1], "Sigma", NOISE[1], ".csv",sep=""), row.names=1)	
+	truth <- truthToMat(rownames(simul), truthList)
+	addr <- getTableAddressing(rownames(truth), truth)
+	truth <- addr$Truth != 0
+	
+	for (np in NP){
+		for (sigma in  NOISE){
+			data <- read.csv(paste("../data/simulations/",size, "nSamp", ns, "Sigma", sigma, ".csv",sep=""), row.names=1)	
+			bootstrapNetwork(data, truth)
+		}
+	}
+	
+}
+
+
+
+```
+
+
+
+
+
+
