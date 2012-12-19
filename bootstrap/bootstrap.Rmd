@@ -73,7 +73,7 @@ compute_ena_aucs <- function(mat,truth){
 		if (i != 1){
 			iter <- 1/((1/iter) + log(rank(-mat[,i]) + 1))
 		} else{
-			iter <- mat[,1]	
+			iter <- 1/(log(rank(-mat[,1]) + 1))
 		}		
 		aucs[i] <- getAUC(truth, iter)
 	}
@@ -183,7 +183,7 @@ We can plot out a very thorough comparison of the difference between the single 
 
 ```{r aucCalc}
 iterations<-200
-AUCs <- array(NA, dim=c(length(SIZE),length(NP), length(NOISE), 3, iterations), dimnames=list(Size=SIZE, Samples=NP, Sigma=NOISE, Method=c("SPACE", "WGCNA", "GeneNet"), 1:iterations))
+AUCs <- array(NA, dim=c(length(SIZE),length(NP), length(NOISE), 3, iterations), dimnames=list(Size=SIZE, Samples=NP, Sigma=NOISE, Method=c("SPACE", "WGCNA", "GeneNet"), Iteration=1:iterations))
 
 cluster <- NULL
 if (require(Rmpi) && require(snow)){
@@ -209,12 +209,31 @@ for (size in SIZE[1:4]){
 	}
 	saveRDS(AUCs, "AUCs.Rds")	
 }
-AUCtab <- as.data.frame.table(AUCs["small",,,,], responseName="AUC")
-colnames(AUCtab)[4] <- "Iteration"
-AUCtab$Iteration <- as.integer(as.character(AUCtab$Iteration))
 ```
+And we can identify for which methods bootstrapping is benefeicial:
+
+```{r}
+plot(apply(AUCs[1:3,,,"SPACE",], 4, mean, na.rm=TRUE), ylab="AUC Delta", xlab="Iteration")
+points(apply(AUCs[1:3,,,"GeneNet",], 4, mean, na.rm=TRUE), col=2)
+points(apply(AUCs[1:3,,,"WGCNA",], 4, mean, na.rm=TRUE), col=3)
+```
+
+We can rule out WGCNA as a potential method which might be helped by bootstrapping.
 
 ```{r}
 library(ggplot2)
-ggplot(AUCtab, aes(Iteration, AUC, color=Method, group=Method)) + geom_point() +  facet_grid(Sigma ~ Samples) + geom_hline(aes(yintercept=0))
+for(size in SIZE[1:4]){
+	AUCtab <- as.data.frame.table(AUCs[size,,,,], responseName="AUC")
+	AUCtab$Iteration <- as.integer(as.character(AUCtab$Iteration))
+	print(ggplot(AUCtab, aes(Iteration, AUC, color=Method, group=Method)) + geom_point() +  facet_grid(Sigma ~ Samples) + geom_hline(aes(yintercept=0)) + opts(title=size))
+}
+
+AUCtab <- as.data.frame.table(AUCs[SIZE[1:4],,,,], responseName="AUC")
+AUCtab$Iteration <- as.integer(as.character(AUCtab$Iteration))
+
+
+AUCavg <- as.data.frame.table(apply(AUCs[SIZE[1:4],,,c("SPACE", "GeneNet"),], c(1,3,4,5), median, na.rm=TRUE), responseName="AUC")
+AUCavg$Iteration <- as.integer(as.character(AUCavg$Iteration))
+ggplot(AUCavg, aes(Iteration, AUC, group=Method, col=Method)) + facet_grid(Sigma ~ Size) + geom_point() + geom_hline(aes(yintercept=0)) + opts(title="Median Improvement in AUC from Bootstrapping")
+
 ```
