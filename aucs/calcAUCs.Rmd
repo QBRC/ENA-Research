@@ -3,7 +3,7 @@ Here we'll document the computation of the AUCs and partial-AUCs of the computed
 
 The following two functions will be used to calculate the AUC or pAUC of some prediction, respectively.
 
-```{r}
+```{r message=FALSE, warning=FALSE, results='hide'}
 library(ROCR)
 
 getAUC <- function(truth, predicted){
@@ -62,14 +62,16 @@ for (size in SIZE){
 						
 		}
 	}	
-	save(AUCs, pAUCs, file="AUCs.Rda")
+	saveRDS(AUCs, file="AUCs.Rds")
+	saveRDS(pAUCs, file="pAUCs.Rds")
 }
 ```
 
 It's probably easiest to keep a 4D array within R for now, rather than writing a series of CSVs. We can output selected 2D tables of interest at a later point.
 
 ```{r}
-save(AUCs, pAUCs, file="AUCs.Rda")
+saveRDS(AUCs, file="AUCs.Rds")
+saveRDS(pAUCs, file="pAUCs.Rds")
 ```
 
 Alternatively, we can convert the 4D matrix to a data.frame.
@@ -88,7 +90,7 @@ We can visualize the performance for a particular network and noise value in 2 d
 
 ```{r}
 library(lattice)
-size <- "moderate"
+size <- SIZE[min(length(SIZE), 3)]
 noise <- "0.25"
 print(xyplot(Freq ~ Samples, group=Method, data=as.data.frame.table(AUCs[,size,,noise]), type="b", auto.key=list(space="right")))
 ```

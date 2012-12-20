@@ -4,35 +4,50 @@
 
 ```{r globals}
 SIZE <- c("tiny","small","moderate","middle","large")
+#SIZE <- c("tiny","small")
 NP <- as.character(c(20, 50, 100, 200, 500, 1000))
+#NP <- as.character(c(20, 50, 100, 200))
 NOISE <- as.character(c(0.25, 0.5, 1, 1.5))
+#NOISE <- as.character(c(0.25, 0.5, 1))
 BOOTSTRAP_COUNT <- 140
 
 set.seed(1234)
 library(knitr)
 ```
 
+
 ## Simulate Networks
 
-```{r simulate, results='hide', message=FALSE, cache=TRUE}
+```{r simulate, results='hide', message=FALSE, echo=FALSE, cache=TRUE}
 sim <- knit_child("simulate/simulateNetworks.Rmd", eval=TRUE)
 ```
 
 `r paste(sim, collapse = '\n')`
 
+
 ## Rebuild Networks
 
-```{r rebuild, results='hide', message=FALSE, cache=TRUE}
+```{r rebuild, results='hide', message=FALSE, echo=FALSE, cache=TRUE}
 rebuild <- knit_child("rebuild/rebuildNetworks.Rmd", eval=TRUE)
 ```
 
 `r paste(rebuild, collapse = '\n')`
 
-## Calculate Area Under the ROC Curve
 
-```{r aucs, results='hide', message=FALSE}
+## Calculate Area Under the ROC Curve
+ 
+```{r aucs, results='hide', message=FALSE, echo=FALSE, cache=TRUE}
 aucs <- knit_child("aucs/calcAUCs.Rmd", eval=TRUE)
 ```
 
 `r paste(aucs, collapse = '\n')`
 
+
+
+## Test Bootstrapping
+
+```{r bootstrap, results='hide', message=FALSE, echo=FALSE}
+boots <- knit_child("bootstrap/bootstrap.Rmd", eval=TRUE)
+```
+
+`r paste(boots, collapse = '\n')`

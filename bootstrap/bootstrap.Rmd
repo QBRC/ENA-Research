@@ -2,8 +2,22 @@ This section will compare the single execution of a networkreconstruction techni
 
 We'll first define the function that will give us the resultant network from a single iteration of 100% and a series of smaller iterations at 70%.
 
-```{r}
-#' Create a data.frame storing one single iteration of the selecte method along with multiple 
+```{r loadF, results='hide', message=FALSE}
+library(WGCNA)
+library(GeneNet)
+library(space)
+library(ENA)
+```
+
+For this analysis, we really aren't concerned about the larger network, so we'll cut the size down. 
+
+
+```{r shrinkSize}
+SIZE <- c("tiny", "small", "moderate", "middle")
+```
+
+```{r defFun}
+# ' Create a data.frame storing one single iteration of the selecte method along with multiple 
 #' bootstrapped iterations of the function. This can later be used to analyze the performance of 
 #' the ENA bootstrapping approach.
 #' @param data the matrix of gene expression to reconstruct
@@ -49,7 +63,7 @@ single_vs_bootstrapped <- function(data, fun, iterations=500, cluster=NULL, samp
 
 We can now define a handful of functions used in analyzing the AUC of the above function.
 
-```{r}
+```{r roc,message=FALSE, results='hide', error=FALSE}
 library(ROCR)
 #' Compute the AUC of the given data
 #' @param truth a vector of binary truth values
@@ -107,41 +121,8 @@ bootstrapNetwork <- function(data, truth, iterations, cluster=cluster){
 	#note that you can use as.data.frame.table(results) to flatten these results
 	#into a data.frame (i.e. for ggplotting.)
 	
-	results
+	list(SPACE = spAUC, WGCNA = wgAUC, GeneNet = gnAUC, diff = results)
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-SIZE <- c("tiny","small","moderate","middle","large")
-NP <- as.character(c(20, 50, 100, 200, 500, 1000))
-NOISE <- as.character(c(0.25, 0.5, 1, 1.5))
-library(ENA)
-library(GeneNet)
-library(WGCNA)
-library(space)
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 truthToMat <- function(IDs, truthList){
 	truth <- matrix(0, ncol=length(IDs), nrow=length(IDs))
@@ -181,7 +162,7 @@ getExpression <- function(size, np, sigma){
 
 We can plot out a very thorough comparison of the difference between the single and bootstrapped methods.
 
-```{r aucCalc}
+```{r calcAUCs, message=FALSE, results='hide'}
 iterations<-200
 AUCs <- array(NA, dim=c(length(SIZE),length(NP), length(NOISE), 3, iterations), dimnames=list(Size=SIZE, Samples=NP, Sigma=NOISE, Method=c("SPACE", "WGCNA", "GeneNet"), Iteration=1:iterations))
 
@@ -191,8 +172,14 @@ if (require(Rmpi) && require(snow)){
 	warning(paste("Distributing bootstrapped networks across a cluster of", mpi.universe.size()-1, "CPUs."))
 }
 
+
+```
+
+We can compute all of the AUC improvements over every network.
+
+```{r aucAll, message=FALSE, results='hide'}
 truth <- NULL
-for (size in SIZE[1:4]){
+for (size in SIZE){
 	truth <- getTruth(size)
 	for (np in NP){
 		cat(np, "\n")
@@ -204,7 +191,7 @@ for (size in SIZE[1:4]){
 																	iterations=iterations, 
 																	cluster=cluster)
 			
-			AUCs[size, np, sigma,,] <- thisNet		
+			AUCs[size, np, sigma,,] <- thisNet$diff	
 		}
 	}
 	saveRDS(AUCs, "AUCs.Rds")	
@@ -212,28 +199,89 @@ for (size in SIZE[1:4]){
 ```
 And we can identify for which methods bootstrapping is benefeicial:
 
-```{r}
-plot(apply(AUCs[1:3,,,"SPACE",], 4, mean, na.rm=TRUE), ylab="AUC Delta", xlab="Iteration")
-points(apply(AUCs[1:3,,,"GeneNet",], 4, mean, na.rm=TRUE), col=2)
-points(apply(AUCs[1:3,,,"WGCNA",], 4, mean, na.rm=TRUE), col=3)
+```{r plotfp}
+plot(apply(AUCs[,,,"SPACE",], 4, mean, na.rm=TRUE), ylab="AUC Delta", xlab="Iteration")
+points(apply(AUCs[,,,"GeneNet",], 4, mean, na.rm=TRUE), col=2)
+points(apply(AUCs[,,,"WGCNA",], 4, mean, na.rm=TRUE), col=3)
+abline(h=0)
 ```
 
 We can rule out WGCNA as a potential method which might be helped by bootstrapping.
 
-```{r}
+```{r ggplot}
 library(ggplot2)
-for(size in SIZE[1:4]){
+for(size in SIZE){
 	AUCtab <- as.data.frame.table(AUCs[size,,,,], responseName="AUC")
 	AUCtab$Iteration <- as.integer(as.character(AUCtab$Iteration))
-	print(ggplot(AUCtab, aes(Iteration, AUC, color=Method, group=Method)) + geom_point() +  facet_grid(Sigma ~ Samples) + geom_hline(aes(yintercept=0)) + opts(title=size))
+	print(ggplot(AUCtab, aes(Iteration, AUC, color=Method, group=Method)) + geom_point() +  facet_grid(Sigma ~ Samples) + geom_hline(aes(yintercept=0)) + ggtitle(size) + ylab(bquote(AUC[bootstrapped] - AUC[single])))
 }
 
-AUCtab <- as.data.frame.table(AUCs[SIZE[1:4],,,,], responseName="AUC")
+AUCtab <- as.data.frame.table(AUCs[,,,,], responseName="AUC")
 AUCtab$Iteration <- as.integer(as.character(AUCtab$Iteration))
 
 
-AUCavg <- as.data.frame.table(apply(AUCs[SIZE[1:4],,,c("SPACE", "GeneNet"),], c(1,3,4,5), median, na.rm=TRUE), responseName="AUC")
+AUCavg <- as.data.frame.table(apply(AUCs[,,,c("SPACE", "GeneNet"),], c(1,3,4,5), median, na.rm=TRUE), responseName="AUC")
 AUCavg$Iteration <- as.integer(as.character(AUCavg$Iteration))
 ggplot(AUCavg, aes(Iteration, AUC, group=Method, col=Method)) + facet_grid(Sigma ~ Size) + geom_point() + geom_hline(aes(yintercept=0)) + opts(title="Median Improvement in AUC from Bootstrapping")
 
+AUCres <- as.data.frame.table(AUCs[,,,,140], responseName="AUC")
+
+ggplot(AUCres, aes(Samples, AUC, fill=Method)) + geom_boxplot() + ylab(bquote(AUC[single] - AUC[bootstrapped])) + geom_hline(aes(yintercept=0))
+
+ggplot(AUCres, aes(Samples, AUC, fill=Method)) + geom_boxplot() + ylab(bquote(AUC[bootstrapped] - AUC[single])) + facet_grid(. ~ Size) + geom_hline(aes(yintercept=0))
+
+ggplot(AUCres, aes(Method, AUC, fill=Method)) + geom_boxplot() + ylab(bquote(AUC[bootstrapped] - AUC[single])) + facet_grid(. ~ Size) + geom_hline(aes(yintercept=0)) + theme(axis.ticks=element_blank(), axis.text.x = element_blank()) + xlab("")
+
+size <- SIZE[min(length(SIZE), 4)]
+sigma <- "0.25"
+truth <- getTruth(size)
+
+actualAUC <- readRDS("../aucs/AUCs.Rds")
+actualAUC <- actualAUC[,size,,sigma]
+AUCdelta <- AUCs
 ```
+
+Now we can plot the individual figures for each method.
+
+```{r spaceFig}
+AUCdelta[size, NP[1:3],sigma,"SPACE",] <- 
+	AUCdelta[size, NP[1:3],sigma,"SPACE",] + 
+	actualAUC["Space",NP[1:3]]
+
+AUCsp <- as.data.frame.table(AUCdelta[size,NP[1:3],sigma,"SPACE",], responseName="AUC")
+AUCsp$Iteration <- as.integer(as.character(AUCsp$Iteration))
+hline.data <- as.data.frame.table(actualAUC["Space", NP[1:3]])
+colnames(hline.data) <- c("Samples", "orig")
+ggplot(AUCsp, aes(Iteration, AUC)) + facet_grid(. ~ Samples) + geom_point() + geom_hline(aes(yintercept = orig), hline.data) + ggtitle("SPACE")
+```
+
+```{r wgcnaFig}
+AUCdelta[size, NP[1:3],sigma,"WGCNA",] <- 
+	AUCdelta[size, NP[1:3],sigma,"WGCNA",] + 
+	actualAUC["WGCNA",NP[1:3]]
+
+AUCsp <- as.data.frame.table(AUCdelta[size,NP[1:3],sigma,"WGCNA",], responseName="AUC")
+AUCsp$Iteration <- as.integer(as.character(AUCsp$Iteration))
+hline.data <- as.data.frame.table(actualAUC["WGCNA", NP[1:3]])
+colnames(hline.data) <- c("Samples", "orig")
+ggplot(AUCsp, aes(Iteration, AUC)) + facet_grid(. ~ Samples) + geom_point() + geom_hline(aes(yintercept = orig), hline.data) + ggtitle("WGCNA")
+```
+
+```{r genenetFig}
+AUCdelta[size, NP[1:3],sigma,"GeneNet",] <- 
+	AUCdelta[size, NP[1:3],sigma,"GeneNet",] + 
+	actualAUC["GeneNet",NP[1:3]]
+
+AUCsp <- as.data.frame.table(AUCdelta[size,NP[1:3],sigma,"GeneNet",], responseName="AUC")
+AUCsp$Iteration <- as.integer(as.character(AUCsp$Iteration))
+hline.data <- as.data.frame.table(actualAUC["GeneNet", NP[1:3]])
+colnames(hline.data) <- c("Samples", "orig")
+ggplot(AUCsp, aes(Iteration, AUC)) + facet_grid(. ~ Samples) + geom_point() + geom_hline(aes(yintercept = orig), hline.data) + ggtitle("GeneNet")
+```
+
+And we'll restore the SIZE variable for later use.
+
+```{r restoreSize}
+SIZE <- c("tiny", "small", "moderate", "middle", "large")
+```
+
