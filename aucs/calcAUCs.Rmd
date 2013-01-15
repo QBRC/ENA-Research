@@ -118,7 +118,7 @@ results <- readRDS(paste(
 
 results$Truth <- as.integer(results$Truth != 0)
 
-plot(0, 0, type="n", xlim=c(0,50), ylim=c(0,35), xlab="Predicted Connection Strength", ylab="False Positive Strength")
+plot(0, 0, type="n", xlim=c(0,50), ylim=c(0,35), xlab="Predicted Connection Strength", ylab="False Positive Strength", main="200 Samples")
 legend(0, 30, c("SPACE", "WGCNA", "GeneNet", "ENA"), col=colors, lwd=3, lty=1:4, y.intersp=1.5)
 
 
@@ -169,7 +169,7 @@ results <- readRDS(paste(
 
 results$Truth <- as.integer(results$Truth != 0)
 
-plot(0, 0, type="n", xlim=c(0,50), ylim=c(0,30), xlab="Predicted Connection Strength", ylab="")
+plot(0, 0, type="n", xlim=c(0,50), ylim=c(0,30), xlab="Predicted Connection Strength", ylab="", main="1,000 Samples")
 
 sp <- results[,c(3,4)]
 plotPerformance(sp,colors[1], 2)

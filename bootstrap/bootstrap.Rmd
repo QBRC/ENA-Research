@@ -236,6 +236,7 @@ size <- SIZE[min(length(SIZE), 4)]
 sigma <- "0.25"
 truth <- getTruth(size)
 
+#Note that the AUCs we're reading in actually are from the bootstrapped network construction, so for plotting purposes we'll actually want to subtract the diff to compute the single AUC, as this is already the bootstrapped AUC.
 actualAUC <- readRDS("../aucs/AUCs.Rds")
 actualAUC <- actualAUC[,size,,sigma]
 AUCdelta <- AUCs
@@ -244,37 +245,43 @@ AUCdelta <- AUCs
 Now we can plot the individual figures for each method.
 
 ```{r spaceFig}
+offset <- AUCdelta[size, NP[1:3], sigma,"SPACE","140"]
 AUCdelta[size, NP[1:3],sigma,"SPACE",] <- 
 	AUCdelta[size, NP[1:3],sigma,"SPACE",] + 
-	actualAUC["Space",NP[1:3]]
+	actualAUC["Space",NP[1:3]] - 
+	offset
 
 AUCsp <- as.data.frame.table(AUCdelta[size,NP[1:3],sigma,"SPACE",], responseName="AUC")
 AUCsp$Iteration <- as.integer(as.character(AUCsp$Iteration))
-hline.data <- as.data.frame.table(actualAUC["Space", NP[1:3]])
+hline.data <- as.data.frame.table(actualAUC["Space", NP[1:3]]-offset)
 colnames(hline.data) <- c("Samples", "orig")
 ggplot(AUCsp, aes(Iteration, AUC)) + facet_grid(. ~ Samples) + geom_point() + geom_hline(aes(yintercept = orig), hline.data) + ggtitle("SPACE")
 ```
 
 ```{r wgcnaFig}
+offset <- AUCdelta[size, NP[1:3], sigma,"WGCNA","140"]
 AUCdelta[size, NP[1:3],sigma,"WGCNA",] <- 
 	AUCdelta[size, NP[1:3],sigma,"WGCNA",] + 
-	actualAUC["WGCNA",NP[1:3]]
+	actualAUC["WGCNA",NP[1:3]] - 
+	offset
 
 AUCsp <- as.data.frame.table(AUCdelta[size,NP[1:3],sigma,"WGCNA",], responseName="AUC")
 AUCsp$Iteration <- as.integer(as.character(AUCsp$Iteration))
-hline.data <- as.data.frame.table(actualAUC["WGCNA", NP[1:3]])
+hline.data <- as.data.frame.table(actualAUC["WGCNA", NP[1:3]]-offset)
 colnames(hline.data) <- c("Samples", "orig")
 ggplot(AUCsp, aes(Iteration, AUC)) + facet_grid(. ~ Samples) + geom_point() + geom_hline(aes(yintercept = orig), hline.data) + ggtitle("WGCNA")
 ```
 
 ```{r genenetFig}
+offset <- AUCdelta[size, NP[1:3], sigma,"GeneNet","140"]
 AUCdelta[size, NP[1:3],sigma,"GeneNet",] <- 
 	AUCdelta[size, NP[1:3],sigma,"GeneNet",] + 
-	actualAUC["GeneNet",NP[1:3]]
+	actualAUC["GeneNet",NP[1:3]] - 
+	offset
 
 AUCsp <- as.data.frame.table(AUCdelta[size,NP[1:3],sigma,"GeneNet",], responseName="AUC")
 AUCsp$Iteration <- as.integer(as.character(AUCsp$Iteration))
-hline.data <- as.data.frame.table(actualAUC["GeneNet", NP[1:3]])
+hline.data <- as.data.frame.table(actualAUC["GeneNet", NP[1:3]]-offset)
 colnames(hline.data) <- c("Samples", "orig")
 ggplot(AUCsp, aes(Iteration, AUC)) + facet_grid(. ~ Samples) + geom_point() + geom_hline(aes(yintercept = orig), hline.data) + ggtitle("GeneNet")
 ```
