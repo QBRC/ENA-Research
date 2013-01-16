@@ -1,0 +1,49 @@
+This file will be used to generate some additional figures based on data stored elsewhere.
+
+```{r}
+library(ggplot2)
+library(ROCR)
+library(space)
+library(ENA)
+
+#Get Bootstrapped ROC
+results <- readRDS("../data/results-ena/middlenSamp20Sigma0.25.Rds")
+bspred <- prediction(results$BootstrappedSPACE, results$Truth != 0)
+bsperf <- performance(bspred,"tpr","fpr")
+
+#Get Non-Bootstrappd ROC
+set.seed(5005)
+simul <- read.csv("../data/simulations/middlenSamp20Sigma0.25.csv",row.names=1)
+single <- buildSpace(simul)
+single <- symmetricize(abs(single))
+single <- single[upper.tri(single)]
+spred <- prediction(single, results$Truth != 0)
+sperf <- performance(spred,"tpr","fpr")
+
+##* Fig 1
+plot(bsperf)
+plot(sperf, add=TRUE)
+```
+
+```{r}
+AUCs <- readRDS("../bootstrap/AUCs.Rds")
+AUCtab <- as.data.frame.table(AUCs[,,,,], responseName="AUC")
+AUCtab$Iteration <- as.integer(as.character(AUCtab$Iteration))
+
+AUCres <- as.data.frame.table(AUCs[,,,"SPACE",140], responseName="AUC")
+
+ggplot(AUCres, aes(Size, AUC, fill=Size)) + geom_boxplot() + ylab(bquote(AUC[bootstrapped] - AUC[single])) + facet_grid(. ~ Samples) + geom_hline(aes(yintercept=0)) + theme(axis.ticks=element_blank(), axis.text.x = element_blank()) + xlab("")
+
+ggplot(AUCres, aes(Samples, AUC, fill=Samples)) + geom_boxplot() + ylab(bquote(AUC[bootstrapped] - AUC[single])) + facet_grid(. ~ Size) + geom_hline(aes(yintercept=0)) + theme(axis.ticks=element_blank(), axis.text.x = element_blank()) + xlab("")
+
+##* Fig 2 (now 3)
+ggplot(AUCres, aes(Size, AUC, fill=Size)) + geom_boxplot() + ylab(bquote(AUC[bootstrapped] - AUC[single])) + geom_hline(aes(yintercept=0)) + theme(axis.ticks=element_blank(), axis.text.x = element_blank()) + xlab("") +ylim(c(0,.09))
+
+```
+
+
+```{r}
+
+
+
+```
