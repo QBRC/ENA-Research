@@ -10,6 +10,7 @@ library(ENA)
 results <- readRDS("../data/results-ena/middlenSamp20Sigma0.25.Rds")
 bspred <- prediction(results$BootstrappedSPACE, results$Truth != 0)
 bsperf <- performance(bspred,"tpr","fpr")
+performance(bspred,"auc")@y.values[[1]]
 
 #Get Non-Bootstrappd ROC
 set.seed(5005)
@@ -19,10 +20,12 @@ single <- symmetricize(abs(single))
 single <- single[upper.tri(single)]
 spred <- prediction(single, results$Truth != 0)
 sperf <- performance(spred,"tpr","fpr")
+performance(spred,"auc")@y.values[[1]]
 
 ##* Fig 1
-plot(bsperf)
-plot(sperf, add=TRUE)
+plot(bsperf, col=1)
+plot(sperf, add=TRUE, col=2)
+legend(.1, .4, c("Bootstrapped Space", "Non-Bootstrapped Space"), col=1:2, lwd=1)
 ```
 
 ```{r}

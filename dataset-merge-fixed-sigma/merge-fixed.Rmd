@@ -1,6 +1,6 @@
 This section will test the reconstruction of three different datasets using a naive merging approach and a meta-analysis approach based on ENA.
 
-First, we'll read in three simulated datasets.
+First, we'll generate three simulated datasets.
 
 ```{r}
 #' Create a simulated randomized "true" regulatory network based on the truth file provided.
@@ -71,9 +71,9 @@ network.simulation <- function(dat, sample, noise)
 }
 
 reg <- randomizeRegulation("middle")
-sim25 <- network.simulation(reg, 200, 0.25)
-sim1 <- network.simulation(reg, 200, 1)
-sim2 <- network.simulation(reg, 200, 2)
+sim1 <- network.simulation(reg, 200, 0.25)
+sim2 <- network.simulation(reg, 200, 0.5)
+sim3 <- network.simulation(reg, 200, 1)
 ```
 
 
@@ -107,7 +107,7 @@ truthToMat <- function(IDs, truthList){
 We'll then need a helper function which, given all of the information about a simulation, can extract the simulated dataset, aggregate the results into a table, and write the output.
 
 ```{r processMatrices}
-processMat <- function(simul, bootstrapCount=140, bootstrapPercentage = 0.7, cluster, truth){
+processMat <- function(simul, bootstrapCount=2, bootstrapPercentage = 0.7, cluster, truth){
 	
 	addressing <- getTableAddressing(rownames(simul), truth)
 			
@@ -134,7 +134,7 @@ We'll want to grab the truth for this network:
 
 ```{r}
 truthList <- read.csv(paste("../truth/truth middle.csv", sep=""));
-truth <- truthToMat(rownames(sim2), truthList)
+truth <- truthToMat(rownames(sim1), truthList)
 
 ```
 		
@@ -151,9 +151,9 @@ if (require(Rmpi) && require(snow)){
 ```
 
 ```{r}
-net25 <- processMat(sim25, cluster=cluster, truth=truth)
-net1 <- processMat(sim1, cluster=cluster, truth=truth)
-net2 <- processMat(sim2, cluster=cluster, truth=truth)
+system.time(net1 <- processMat(sim1, cluster=cluster, truth=truth))
+system.time(net2 <- processMat(sim2, cluster=cluster, truth=truth))
+system.time(net3 <- processMat(sim3, cluster=cluster, truth=truth))
 ```
 
 ### Merged Network Reconstruction
@@ -161,16 +161,17 @@ net2 <- processMat(sim2, cluster=cluster, truth=truth)
 We'll now want to compute the merged networks using either the naive method or the meta-analysis ENA method. We'll perform the naive first by just stacking the three simulations on top of one another.
 
 ```{r}
-stackedSim <- cbind(sim25, sim1, sim2)
-stackedNet <- processMat(stackedSim, cluster=cluster, truth=truth)
+stackedSim <- cbind(sim1, sim2, sim3)
+colnames(stackedSim) <- paste("S", 1:600, sep="")
+system.time(stackedNet <- processMat(stackedSim, cluster=cluster, truth=truth))
 ```
 
 And the alternative ENA method can be performed by joining the three previous results.
 
 ```{r}
-enaNet <- ena(cbind(net25$ENA, net1$ENA, net2$ENA))
+enaNet <- ena(cbind(net1$ENA, net2$ENA, net3$ENA))
 
-save(enaNet, stackedNet, net25, net1, net2, file="nets.Rda")
+save(enaNet, stackedNet, net1, net2, net3, file="nets.Rda")
 ```
 
 ### Performance Review
@@ -178,11 +179,7 @@ save(enaNet, stackedNet, net25, net1, net2, file="nets.Rda")
 We can now calculate the the ROCs/AUCs of these networks.
 
 ```{r}
-truVec <- net25$Truth != 0
-pred25 <- prediction(net25$ENA, truVec)
-perf25 <- performance(pred25, "tpr", "fpr")
-performance(pred25, "auc")@y.values[[1]]
-
+truVec <- net1$Truth != 0
 pred1 <- prediction(net1$ENA, truVec)
 perf1 <- performance(pred1, "tpr", "fpr")
 performance(pred1, "auc")@y.values[[1]]
@@ -190,6 +187,10 @@ performance(pred1, "auc")@y.values[[1]]
 pred2 <- prediction(net2$ENA, truVec)
 perf2 <- performance(pred2, "tpr", "fpr")
 performance(pred2, "auc")@y.values[[1]]
+
+pred3 <- prediction(net3$ENA, truVec)
+perf3 <- performance(pred3, "tpr", "fpr")
+performance(pred3, "auc")@y.values[[1]]
 
 predStac <- prediction(stackedNet$ENA, truVec)
 perfStac <- performance(predStac, "tpr", "fpr")
@@ -204,15 +205,16 @@ And plot them
 ```{r}
 plot(perfENA, col=1, lwd=2)
 plot(perfStac, col=2, lwd=2, add=TRUE)
-plot(perf25, col=3, add=TRUE)
-plot(perf1, col=4, add=TRUE)
-plot(perf2, col=5, add=TRUE)
+plot(perf1, col=3, add=TRUE)
+plot(perf2, col=4, add=TRUE)
+plot(perf3, col=5, add=TRUE)
 legend(.1, .4, 
 			 c("ENA", 
 			 	"Simple Merge", 
-			 	expression(paste("Individual Network, ", sigma,"=0.25", sep="")), 
-			 	expression(paste("Individual Network, ", sigma,"=1", sep="")), 
-			 	expression(paste("Individual Network, ", sigma,"=2", sep=""))), col=1:5, lwd=c(2,2,1,1,1)) 
+			 	"Individual Network 1", 
+			 	"Individual Network 2", 
+			 	"Individual Network 3")
+			 , col=1:5, lwd=c(2,2,1,1,1)) 
 ```
 
 
