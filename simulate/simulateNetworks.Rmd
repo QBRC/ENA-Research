@@ -7,6 +7,7 @@ We'll first define the function used to simulate the networks.
 #' @param size should be one of c("tiny","small","moderate","middle","large", "huge")
 #' @param sample can be any positive number. 
 #' @param noise  can be any positive number (for our study, we should try 0.25, 0.5, 0.75, 1, 1.5 and 2)  
+#' @author Guanghua Xiao \email{Guanghua.Xiao@@UTSouthwestern.edu}
 network.simulation <- function(size, sample, noise, outputDir)
 {
 	dat <- read.csv(paste("../truth/", size,".csv",sep=""))

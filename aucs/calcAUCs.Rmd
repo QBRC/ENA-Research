@@ -6,6 +6,10 @@ The following two functions will be used to calculate the AUC or pAUC of some pr
 ```{r message=FALSE, warning=FALSE, results='hide'}
 library(ROCR)
 
+#' Compute the AUC of the provided predictions.
+#' @param truth The binary truth vector
+#' @param predicted The continuous predicted connection strengths.
+#' @author Jeffrey D. Allen \email{Jeffrey.Allen@@UTSouthwestern.edu}
 getAUC <- function(truth, predicted){
   pred <- prediction(predicted, truth);
   auc <- performance(pred, "auc")@y.values[[1]];
@@ -13,6 +17,11 @@ getAUC <- function(truth, predicted){
 }
 
 
+#' Compute the pAUC of the provided predictions.
+#' @param truth The binary truth vector
+#' @param predicted The continuous predicted connection strengths.
+#' @param threshold The value at which to control the partial AUC.
+#' @author Jeffrey D. Allen \email{Jeffrey.Allen@@UTSouthwestern.edu}
 getpAUC <- function(truth, predicted, threshold=0.005){
   pred <- prediction(predicted, truth);
   auc <- performance(pred, "auc", fpr.stop=threshold)@y.values[[1]];

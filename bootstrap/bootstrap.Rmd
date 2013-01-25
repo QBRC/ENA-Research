@@ -25,6 +25,7 @@ SIZE <- c("tiny", "small", "moderate", "middle")
 #' @param iterations the number of iterations to bootstrap through
 #' @param cluster the MPI cluster to use when bootstrapping
 #' @param sample.percentage the percentage of total samples to use in each bootstrapped iteration.
+#' @author Jeffrey D. Allen \email{Jeffrey.Allen@@UTSouthwestern.edu}
 single_vs_bootstrapped <- function(data, fun, iterations=500, cluster=NULL, sample.percentage = 0.7){
     funName <- fun
     fun <- get(fun)
@@ -68,6 +69,7 @@ library(ROCR)
 #' Compute the AUC of the given data
 #' @param truth a vector of binary truth values
 #' @param predicted a vector of numeric prediction values.
+#' @author Jeffrey D. Allen \email{Jeffrey.Allen@@UTSouthwestern.edu}
 getAUC <- function(truth, predicted){
   pred <- prediction(predicted, truth);
   auc <- performance(pred, "auc")@y.values[[1]];
@@ -99,6 +101,7 @@ compute_ena_aucs <- function(mat,truth){
 #' @param data the expression data on which reconstruction will be applied
 #' @param truth the binary truth matrix for this data
 #' @param cluster the MPI cluster across which to distribute the work.
+#' @author Jeffrey D. Allen \email{Jeffrey.Allen@@UTSouthwestern.edu}
 bootstrapNetwork <- function(data, truth, iterations, cluster=cluster){
 	sp <- single_vs_bootstrapped(data, "buildSpace", iterations=iterations, cluster=cluster)
 	spAUC <- getAUC(truth, sp$Single)
@@ -124,6 +127,14 @@ bootstrapNetwork <- function(data, truth, iterations, cluster=cluster){
 	list(SPACE = spAUC, WGCNA = wgAUC, GeneNet = gnAUC, diff = results)
 }
 
+
+#' Convert an adjacency-like list (which may or may not contain all the gene 
+#' IDs in the network) into an adjacency matrix.
+#' 
+#' @param IDs A vector of Gene IDs in this network
+#' @param truthList An adjacency list containing the truth to be converted 
+#' to a matrix. Should have vectors for "Source", "Target", and "Regulation."
+#' @author Jeffrey D. Allen \email{Jeffrey.Allen@@UTSouthwestern.edu}
 truthToMat <- function(IDs, truthList){
 	truth <- matrix(0, ncol=length(IDs), nrow=length(IDs))
 	rownames(truth) <- IDs
@@ -142,6 +153,7 @@ truthToMat <- function(IDs, truthList){
 #' Get a binary vector of truth for the given size corresponding to the upper
 #' triangle of the dataset.
 #' @param size one of "tiny", "small", "moderate", "middle", or "large"
+#' @author Jeffrey D. Allen \email{Jeffrey.Allen@@UTSouthwestern.edu}
 getTruth <- function(size){
 	truthList <- read.csv(paste("../truth/truth ", size, ".csv", sep=""));
 	simul <- read.csv(paste("../data/simulations/",size, "nSamp", NP[1], "Sigma", NOISE[1], ".csv",sep=""), row.names=1)	
@@ -154,6 +166,7 @@ getTruth <- function(size){
 
 #' Get the expression data fora particular network size, sample number, and 
 #' noise value.
+#' @author Jeffrey D. Allen \email{Jeffrey.Allen@@UTSouthwestern.edu}
 getExpression <- function(size, np, sigma){
 	data <- read.csv(paste("../data/simulations/",size, "nSamp", np, "Sigma", sigma, ".csv",sep=""), row.names=1)	
 	data

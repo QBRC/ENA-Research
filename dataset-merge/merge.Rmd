@@ -5,6 +5,7 @@ First, we'll read in three simulated datasets.
 ```{r}
 #' Create a simulated randomized "true" regulatory network based on the truth file provided.
 #' @param size should be one of c("tiny","small","moderate","middle","large", "huge")
+#' @author Jeffrey D. Allen \email{Jeffrey.Allen@@UTSouthwestern.edu}
 randomizeRegulation <- function(size){
 	dat <- read.csv(paste("../truth/", size,".csv",sep=""))
 
@@ -24,7 +25,8 @@ randomizeRegulation <- function(size){
 #'
 #' @param dat the regulatory truth obtained from randomizeRegulation()
 #' @param sample can be any positive number. 
-#' @param noise  can be any positive number (for our study, we should try 0.25, 0.5, 0.75, 1, 1.5 and 2)  
+#' @param noise  can be any positive number (for our study, we should try 0.25, 0.5, 0.75, 1, 1.5 and 2) 
+#' @author Jeffrey D. Allen \email{Jeffrey.Allen@@UTSouthwestern.edu}
 network.simulation <- function(dat, sample, noise)
 {
 	
@@ -88,6 +90,13 @@ library(ROCR)
 We'll first need a function to extract the true network for inclusion in our aggregated tables.
 
 ```{r}
+#' Convert an adjacency-like list (which may or may not contain all the gene 
+#' IDs in the network) into an adjacency matrix.
+#' 
+#' @param IDs A vector of Gene IDs in this network
+#' @param truthList An adjacency list containing the truth to be converted 
+#' to a matrix. Should have vectors for "Source", "Target", and "Regulation."
+#' @author Jeffrey D. Allen \email{Jeffrey.Allen@@UTSouthwestern.edu}
 truthToMat <- function(IDs, truthList){
 	truth <- matrix(0, ncol=length(IDs), nrow=length(IDs))
 	rownames(truth) <- IDs
@@ -107,6 +116,16 @@ truthToMat <- function(IDs, truthList){
 We'll then need a helper function which, given all of the information about a simulation, can extract the simulated dataset, aggregate the results into a table, and write the output.
 
 ```{r processMatrices}
+#' Read and process an expression matrix using all three methods and ENA 
+#' and return the generated results.
+#' @param simul The simulated expression data
+#' @param bootstrapCount The number of iterations to perform while bootstrapping.
+#' @param bootstrapPercentage The percentage of available samples to include in each
+#' bootstrapped iteration.
+#' @param Cluster an MPI cluster to which we can distribute the work.
+#' @param truth The truth for the network -- can be combined into the resultant
+#' output for easier analysis of performance later.
+#' @author Jeffrey D. Allen \email{Jeffrey.Allen@@UTSouthwestern.edu}
 processMat <- function(simul, bootstrapCount=140, bootstrapPercentage = 0.7, cluster, truth){
 	
 	addressing <- getTableAddressing(rownames(simul), truth)

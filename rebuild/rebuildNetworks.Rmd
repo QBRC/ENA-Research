@@ -16,6 +16,13 @@ library(ENA)
 We'll first need a function to extract the true network for inclusion in our aggregated tables.
 
 ```{r}
+#' Convert an adjacency-like list (which may or may not contain all the gene 
+#' IDs in the network) into an adjacency matrix.
+#' 
+#' @param IDs A vector of Gene IDs in this network
+#' @param truthList An adjacency list containing the truth to be converted 
+#' to a matrix. Should have vectors for "Source", "Target", and "Regulation."
+#' @author Jeffrey D. Allen \email{Jeffrey.Allen@@UTSouthwestern.edu}
 truthToMat <- function(IDs, truthList){
 	truth <- matrix(0, ncol=length(IDs), nrow=length(IDs))
 	rownames(truth) <- IDs
@@ -35,7 +42,18 @@ truthToMat <- function(IDs, truthList){
 We'll then need a helper function which, given all of the information about a simulation, can extract the simulated dataset, aggregate the results into a table, and write the output.
 
 ```{r processMatrices}
-
+#' Read and process an expression matrix using all three methods and ENA 
+#' and return the generated results.
+#' @param size The size of the network to use ("tiny", "small", etc.)
+#' @param ns The number of samples in the desired dataset.
+#' @param dataDir Where to find the expression data.
+#' @param bootstrapCount The number of iterations to perform while bootstrapping.
+#' @param bootstrapPercentage The percentage of available samples to include in each
+#' bootstrapped iteration.
+#' @param Cluster an MPI cluster to which we can distribute the work.
+#' @param truth The truth for the network -- can be combined into the resultant
+#' output for easier analysis of performance later.
+#' @author Jeffrey D. Allen \email{Jeffrey.Allen@@UTSouthwestern.edu}
 processMat <- function(size, ns, sigma, dataDir, bootstrapCount, bootstrapPercentage = 0.7, cluster, truth){
 	simul <- read.csv(paste(dataDir,size, "nSamp", ns, "Sigma", sigma, ".csv",sep=""), row.names=1)	
 	

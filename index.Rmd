@@ -4,11 +4,8 @@
 
 ```{r globals}
 SIZE <- c("tiny","small","moderate","middle","large")
-#SIZE <- c("tiny","small")
 NP <- as.character(c(20, 50, 100, 200, 500, 1000))
-#NP <- as.character(c(20, 50, 100, 200))
 NOISE <- as.character(c(0.25, 0.5, 1, 1.5))
-#NOISE <- as.character(c(0.25, 0.5, 1))
 BOOTSTRAP_COUNT <- 140
 
 set.seed(1234)
@@ -46,8 +43,19 @@ aucs <- knit_child("aucs/calcAUCs.Rmd", eval=TRUE)
 
 ## Test Bootstrapping
 
-```{r bootstrap, results='hide', message=FALSE, echo=FALSE}
+```{r bootstrap, results='hide', message=FALSE, echo=FALSE, cache=TRUE}
 boots <- knit_child("bootstrap/bootstrap.Rmd", eval=TRUE)
 ```
 
 `r paste(boots, collapse = '\n')`
+
+
+## Merge Datasets
+
+```{r mergeDS, results='hide', message=FALSE, echo=FALSE, cache=TRUE}
+mergeDS <- knit_child("dataset-merge/merge.Rmd", eval=TRUE)
+```
+
+`r paste(mergeDS, collapse = '\n')`
+
+Copyright ©2012-2013, The University of Texas Southwestern Medical Center. All rights reserved.
