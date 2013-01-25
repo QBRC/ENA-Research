@@ -1,0 +1,1 @@
+This directory will handle the study involving the three different datasets generated with different noise values on a single network, each with 200 samples. It will compare the performance of reconstructing each dataset independently vs. merging them all into a single, 600 sample dataset vs. reconstructing each independently then aggregating using ENA.

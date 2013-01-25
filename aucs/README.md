@@ -1,0 +1,1 @@
+This directory is responsible for evaluating the performance of all of the networks saved to disk by the rebuilding code. It will calculate the AUC and pAUC of each network then save it to local RDS files in this directory.
