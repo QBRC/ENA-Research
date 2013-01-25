@@ -1,0 +1,1 @@
+Stores the truth of the networks of all sizes to be reconstructed.
