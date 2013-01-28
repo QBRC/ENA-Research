@@ -1,0 +1,1 @@
+This directory is responsible for rebuilding all of the simulated datasets using the GeneNet, SPACE, WGCNA, and ENA methods then saving the reconstructed networks to disk for further analysis to be performed elsewhere.

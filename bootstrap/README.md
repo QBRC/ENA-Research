@@ -1,1 +1,1 @@
-Research related to bootstrapping.
+This directory evaluates the performance improvement offered by bootstrapping different techniques and compares that to the performance of merely running the reconstruction once globally.
