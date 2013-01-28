@@ -53,7 +53,6 @@ At the time of writing, the package versions used are:
   </tr>
 </table>
     
-Additionally, we recommend Rmpi (0.5-9) and snow (0.3-9) if you're able to run the code on a distributed MPI cluster.
-    
+Additionally, we recommend Rmpi (0.5-9) and snow (0.3-9) if you're able to run the code on a distributed MPI cluster. At the time of writing, it took approximately 65 CPU-hours to run all analysis included in `index.Rmd`, or 5.75 hours when distributed across 8 nodes, each with 12 Intel Xeon X5650 CPU Cores.    
 
 Copyright ©2012-2013, The University of Texas Southwestern Medical Center.  All rights reserved.
