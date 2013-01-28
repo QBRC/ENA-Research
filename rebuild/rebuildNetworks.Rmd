@@ -87,6 +87,7 @@ if (require(Rmpi) && require(snow)){
 }
 
 dataDir <- "../data/simulations/"
+dir.create("../data/results-ena/")
 
 for (size in SIZE){
 	truthList <- read.csv(paste("../truth/truth ", size, ".csv", sep=""));

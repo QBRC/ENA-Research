@@ -10,6 +10,7 @@ We'll first define the function used to simulate the networks.
 #' @author Guanghua Xiao \email{Guanghua.Xiao@@UTSouthwestern.edu}
 network.simulation <- function(size, sample, noise, outputDir)
 {
+	dir.create(outputDir)
 	dat <- read.csv(paste("../truth/", size,".csv",sep=""))
 
 	dat <- dat[dat$Source != dat$Target,]
@@ -68,6 +69,7 @@ network.simulation <- function(size, sample, noise, outputDir)
 Now we'll generate the networks described in the existing variables `SIZE`, `NP`, and `NOISE` defined elsewhere.
 
 ```{r}
+
 for(size in SIZE){
 	for( sample in NP){
 		for(noise in NOISE){
