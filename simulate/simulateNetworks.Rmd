@@ -1,7 +1,7 @@
 
 We'll first define the function used to simulate the networks.
 
-```{r}
+```{r, warning=FALSE}
 #' Read the edge definition and simulate the regulation ###
 #'
 #' @param size should be one of c("tiny","small","moderate","middle","large", "huge")

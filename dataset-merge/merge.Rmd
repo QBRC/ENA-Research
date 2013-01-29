@@ -79,7 +79,7 @@ sim2 <- network.simulation(reg, 200, 2)
 ```
 
 
-```{r load, results='hide', message=FALSE}
+```{r loadpack, results='hide', message=FALSE}
 library(WGCNA)
 library(GeneNet)
 library(space)
@@ -115,7 +115,7 @@ truthToMat <- function(IDs, truthList){
 
 We'll then need a helper function which, given all of the information about a simulation, can extract the simulated dataset, aggregate the results into a table, and write the output.
 
-```{r processMatrices}
+```{r processMatricesMer}
 #' Read and process an expression matrix using all three methods and ENA 
 #' and return the generated results.
 #' @param simul The simulated expression data
@@ -161,7 +161,7 @@ truth <- truthToMat(rownames(sim2), truthList)
 		
 We'll now reconstruct each of these networks individually.
 
-```{r calcAUCs, message=FALSE, results='hide'}
+```{r calcAUCsMer, message=FALSE, results='hide'}
 cluster <- NULL
 if (require(Rmpi) && require(snow)){
 	invisible(capture.output(cluster <- makeCluster(mpi.universe.size()-1, type="MPI")))	

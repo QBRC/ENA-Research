@@ -40,6 +40,14 @@ aucs <- knit_child("aucs/calcAUCs.Rmd", eval=TRUE)
 `r paste(aucs, collapse = '\n')`
 
 
+## Merge Datasets
+
+```{r mergeDS, results='hide', message=FALSE, echo=FALSE, cache=TRUE}
+mergeDS <- knit_child("dataset-merge/merge.Rmd", eval=TRUE)
+```
+
+`r paste(mergeDS, collapse = '\n')`
+
 
 ## Test Bootstrapping
 
@@ -48,14 +56,5 @@ boots <- knit_child("bootstrap/bootstrap.Rmd", eval=TRUE)
 ```
 
 `r paste(boots, collapse = '\n')`
-
-
-## Merge Datasets
-
-```{r mergeDS, results='hide', message=FALSE, echo=FALSE, cache=TRUE}
-mergeDS <- knit_child("dataset-merge/merge.Rmd", eval=TRUE)
-```
-
-`r paste(mergeDS, collapse = '\n')`
 
 Copyright ©2012-2013, The University of Texas Southwestern Medical Center. All rights reserved.
