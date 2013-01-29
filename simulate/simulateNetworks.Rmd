@@ -68,7 +68,7 @@ network.simulation <- function(size, sample, noise, outputDir)
 
 Now we'll generate the networks described in the existing variables `SIZE`, `NP`, and `NOISE` defined elsewhere.
 
-```{r}
+```{r, warning=FALSE}
 
 for(size in SIZE){
 	for( sample in NP){
