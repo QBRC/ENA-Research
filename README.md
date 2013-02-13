@@ -3,7 +3,7 @@ ENA-Research
 
 The research and exploration going into the development of the Ensemble Network Aggregation approach to reconstructing gene regulatory networks.
 
-Execute the following command in R to begin reproducing our analysis:
+To reproduce our analysis, download this repository (either using the `git clone` command or by manually downloading the .zip or .tar.gz archive provided at the top of this page. Then open R in the base directory of this project and run the following command in R:
 
     library(knitr); knit2html(\"index.Rmd\");
 
