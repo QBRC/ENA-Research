@@ -7,7 +7,7 @@ To reproduce our analysis, download this repository (either using the `git clone
 
     library(knitr); knit2html(\"index.Rmd\");
 
-If you'd rather view the results as they were excuted on our equipment, you can view them in the [index.html](http://htmlpreview.github.com/?https://github.com/QBRC/ENA-Research/blob/master/index.html) file above.
+If you'd rather view the results as they were excuted on our equipment, you can view them in the index.html file above. If, instead of viewing the raw HTML, you prefer to view a rendered result, please [click here](http://htmlpreview.github.com/?https://github.com/QBRC/ENA-Research/blob/master/index.html).
 
 You can view the READMEs inside of each directory to see more details about what the contents of each do. There are some dependencies between these directories, and the order in which they're executed in `index.Rmd` is:
 
