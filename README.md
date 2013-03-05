@@ -3,7 +3,7 @@ ENA-Research
 
 The research and exploration going into the development of the Ensemble Network Aggregation approach to reconstructing gene regulatory networks which resulted in the [ENA R package](https://github.com/QBRC/ena/).
 
-To reproduce our analysis, download this repository (either using the `git clone` command or by manually downloading the .zip or .tar.gz archive provided at the top of this page. Then open R in the base directory of this project and run the following command in R:
+To reproduce our analysis, download this repository (either using the `git clone` command or by manually downloading the .zip or .tar.gz archive provided at the top of this page. Now ensure that all R packages listed below are installed and working properly on your system. Then open R in the base directory of this project and run the following command in R:
 
     library(knitr); knit2html(\"index.Rmd\");
 
