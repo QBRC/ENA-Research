@@ -1,7 +1,7 @@
 ENA-Research
 ============
 
-The research and exploration going into the development of the Ensemble Network Aggregation approach to reconstructing gene regulatory networks.
+The research and exploration going into the development of the Ensemble Network Aggregation approach to reconstructing gene regulatory networks which resulted in the [ENA R package](https://github.com/QBRC/ena/).
 
 To reproduce our analysis, download this repository (either using the `git clone` command or by manually downloading the .zip or .tar.gz archive provided at the top of this page. Then open R in the base directory of this project and run the following command in R:
 
@@ -14,8 +14,10 @@ You can view the READMEs inside of each directory to see more details about what
 1. simulate
 2. rebuild
 3. aucs
-4. bootstrap
-5. dataset-merge
+4. dataset-merge
+5. bootstrap
+
+The one analysis not currently included in the automated pipeline for logistical reasons is `ecoli`. You can compile that document in the same way you compile `index.Rmd` after changing into the `/ecoli/` directory. Again, if you'd rather view our compiled result you may do so [here](http://htmlpreview.github.com/?https://github.com/QBRC/ENA-Research/blob/master/ecoli/ecoli.html).
 
 ## Required Packages
 
@@ -27,7 +29,7 @@ At the time of writing, the package versions used are:
 
 <table>
   <tr>
-    <td>ENA</td><td>1.1-103</td>
+    <td>ENA</td><td>1.2-4</td>
   </tr>
   <tr>
     <td>GeneNet</td><td>1.2.5</td>
@@ -55,6 +57,6 @@ At the time of writing, the package versions used are:
   </tr>
 </table>
     
-Additionally, we recommend Rmpi (0.5-9) and snow (0.3-9) if you're able to run the code on a distributed MPI cluster. At the time of writing, it took approximately 65 CPU-hours to run all analysis included in `index.Rmd`, or 5.75 hours when distributed across 8 nodes, each with 12 Intel Xeon X5650 CPU Cores.    
+Additionally, we recommend Rmpi (0.5-9) and snow (0.3-9) if you're able to run the code on a distributed MPI cluster. At the time of writing, it took approximately 200 CPU-hours to run all analysis included in `index.Rmd`, or 18 hours when distributed across 8 nodes, each with 12 Intel Xeon X5650 CPU Cores.    
 
 Copyright ©2012-2013, The University of Texas Southwestern Medical Center.  All rights reserved.
